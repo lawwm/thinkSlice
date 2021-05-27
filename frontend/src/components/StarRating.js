@@ -5,7 +5,7 @@ const StarRating = () => {
   return (
     <>
       {[...Array(5)].map((i) => (
-        <FaStar color={"#ff4400"} className="star"/>
+        <FaStar color={"#ff4400"} className="star" />
       ))}
     </>
   );
