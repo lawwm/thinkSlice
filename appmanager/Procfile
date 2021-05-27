@@ -1,1 +1,1 @@
-web: gunicorn appmanager.wsgi --log-file -
+web: gunicorn --pythonpath appmanager appmanager.wsgi --log-file -

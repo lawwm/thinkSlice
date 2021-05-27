@@ -1,3 +1,4 @@
+appdirs==1.4.4
 asgiref==3.3.4
 astroid==2.5.6
 boto3==1.17.82
@@ -9,6 +10,7 @@ chardet==4.0.0
 colorama==0.4.4
 coverage==5.5
 cryptography==3.4.7
+distlib==0.3.1
 dj-database-url==0.5.0
 Django==3.2.3
 django-cors-headers==3.7.0
@@ -17,6 +19,7 @@ django-heroku==0.3.1
 django-rest-knox==4.1.0
 django-storages==1.11.1
 djangorestframework==3.12.4
+filelock==3.0.12
 google-api-core==1.28.0
 google-auth==1.30.0
 googleapis-common-protos==1.53.0
@@ -31,6 +34,7 @@ mux-python @ git+https://github.com/muxinc/mux-python.git@c2df765035d457dd98ae69
 oauthlib==3.1.0
 packaging==20.9
 Pillow==8.2.0
+pipenv==2020.11.15
 protobuf==3.17.0
 psycopg2==2.8.6
 pyasn1==0.4.8
@@ -50,5 +54,7 @@ sqlparse==0.4.1
 toml==0.10.2
 uritemplate==3.0.1
 urllib3==1.26.5
+virtualenv==20.4.7
+virtualenv-clone==0.5.4
 whitenoise==5.2.0
 wrapt==1.12.1
