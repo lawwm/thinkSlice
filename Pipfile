@@ -17,6 +17,7 @@ django-storages = "*"
 gunicorn = "*"
 django-heroku = "*"
 whitenoise = "*"
+pillow = "*"
 
 [dev-packages]
 pylint = "*"
