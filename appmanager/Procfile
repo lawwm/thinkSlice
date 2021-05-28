@@ -1,2 +1,0 @@
-web: gunicorn --pythonpath appmanager appmanager.wsgi --log-file -
-web: python appmanager/manage.py runserver 0.0.0.0:$PORT
