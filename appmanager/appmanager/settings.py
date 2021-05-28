@@ -31,7 +31,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['.thinkslice.com', '.localhost:3000']
+ALLOWED_HOSTS = ['.thinkslice.com', '.localhost:3000', '121.7.249.119', "*"]
 
 
 # Application definition
