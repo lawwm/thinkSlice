@@ -21,7 +21,7 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(BASE_DIR)
+# print(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -30,9 +30,10 @@ print(BASE_DIR)
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = env('DEBUG') == 'True'
+print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['.thinkslice.com', '.localhost:3000', '121.7.249.119', "*", ".thinkslice.vercel.app/"]
+ALLOWED_HOSTS = ['.localhost:3000', ".thinkslice.vercel.app/"]
 
 
 # Application definition
@@ -63,7 +64,7 @@ REST_FRAMEWORK = {
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://thinkslice.vercel.app/"
+    "https://thinkslice.vercel.app"
 ]
 
 MIDDLEWARE = [
@@ -80,7 +81,7 @@ MIDDLEWARE = [
 ]
 
 # SECURE_HSTS_SECONDS = 1
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = env('DEBUG') != 'True'
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -161,15 +162,15 @@ USE_TZ = True
 # MEDIA_ROOT = ''
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-print(MEDIA_ROOT)
-print(DATABASES)
+# print(MEDIA_ROOT)
+# print(DATABASES)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 #STATIC_ROOT = BASE_DIR.parent.child('staticfiles')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
-print(STATIC_ROOT)
+# print(STATIC_ROOT)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
