@@ -32,7 +32,7 @@ def UploadVideo(request):
         # Return url api for direct upload
         create_asset_request = mux_python.CreateAssetRequest(playback_policy=[mux_python.PlaybackPolicy.PUBLIC])
         create_upload_request = mux_python.CreateUploadRequest(timeout=3600, new_asset_settings=create_asset_request,
-             cors_origin="*", test=True)
+             cors_origin="thinkslice.vercel.app", test=True)
         create_upload_response = uploads_api.create_direct_upload(create_upload_request)  
         
         print(create_upload_response)
@@ -62,6 +62,8 @@ class AssetView(viewsets.ViewSet):
         # GET asset using asset_id
         asset_response = assets_api.get_asset(asset_id)
 
+        print(request.data)
+
         # Append API data to request data
         request.data['creator_profile'] = get_object_or_404(Profile, user=request.user.id).id
         request.data['asset_id'] = asset_id
@@ -70,7 +72,9 @@ class AssetView(viewsets.ViewSet):
         request.data['policy'] = asset_response.data.playback_ids[0].policy
         request.data['created_at'] = asset_response.data.created_at
 
-        # Check that same profile has created a video for the same subject
+        print(request.data)
+
+        # Check if same profile has created a video for the same subject
         check_existing = Video.objects.filter(creator_profile = request.data['creator_profile'], 
             subject=request.data['subject'])
         if check_existing.exists():
@@ -79,6 +83,7 @@ class AssetView(viewsets.ViewSet):
 
         # Create serializer
         serializer = CreateVideoSerializer(data=request.data)
+        print(serializer)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
