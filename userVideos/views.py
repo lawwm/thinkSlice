@@ -69,7 +69,7 @@ class AssetView(viewsets.ViewSet):
         request.data['creator_profile'] = get_object_or_404(Profile, user=request.user.id).id
         request.data['asset_id'] = asset_id
         request.data['playback_id'] = asset_response.data.playback_ids[0].id
-        request.data['duration'] = asset_response.data.duration
+        #request.data['duration'] = asset_response.data.duration
         request.data['policy'] = asset_response.data.playback_ids[0].policy
         request.data['created_at'] = asset_response.data.created_at
 
