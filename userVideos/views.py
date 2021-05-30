@@ -61,7 +61,8 @@ class AssetView(viewsets.ViewSet):
 
         # GET asset using asset_id
         asset_response = assets_api.get_asset(asset_id)
-
+        print(asset_response)
+        print(asset_response.data.duration)
         print(request.data)
 
         # Append API data to request data
