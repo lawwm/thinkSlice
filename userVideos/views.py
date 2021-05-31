@@ -32,7 +32,7 @@ def UploadVideo(request):
         # Return url api for direct upload
         create_asset_request = mux_python.CreateAssetRequest(playback_policy=[mux_python.PlaybackPolicy.PUBLIC])
         create_upload_request = mux_python.CreateUploadRequest(timeout=3600, new_asset_settings=create_asset_request,
-             cors_origin="thinkslice.vercel.app", test=True)
+             cors_origin="thinkslice.vercel.app", test=False)
         create_upload_response = uploads_api.create_direct_upload(create_upload_request)  
         
         print(create_upload_response)
