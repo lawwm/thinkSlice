@@ -91,7 +91,8 @@ class DetailProfileView(viewsets.ViewSet):
         profiles = get_object_or_404(Profile, user=kwargs['pk'])
         self.check_object_permissions(self.request, profiles)
         data = {
-                    "tutor_contact": "",
+                    "tutor_whatsapp": None,
+                    "tutor_telegram": None,
                     "aggregate_star": None,
                     "duration_classes": None,
                     "subjects": None,
