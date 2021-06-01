@@ -111,7 +111,7 @@ class GetPatchPutDeleteProfileAPI(TestCase):
         # PUT profile clear the profile details while not being the owner
         clearData = {
                 "tutor_whatsapp": None,
-                "tutor_telegram": None,
+                "tutor_telegram"
                 "aggregate_star": None,
                 "duration_classes": None,
                 "subjects": None,
