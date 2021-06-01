@@ -3,7 +3,7 @@ from rest_framework import generics, viewsets, mixins, status
 from rest_framework.response import Response
 from userProfiles.models import Profile
 from userReviews.models import Review
-from .serializers import CreateReviewSerializer, AccessReviewSerializer
+from .serializers import CreateReviewSerializer, AccessReviewSerializer, StudentReviewSerializer, TutorReviewSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.permissions import IsReviewerOrReadOnly
 # Create your views here.
@@ -32,7 +32,7 @@ class TutorReviewView(viewsets.ViewSet):
     def list(self, request, *args, **kwargs):
         profile_id = get_object_or_404(Profile, user=kwargs['pk']).id
         reviews = Review.objects.filter(tutor_profile=profile_id)
-        serializer = AccessReviewSerializer(reviews, many=True)
+        serializer = StudentReviewSerializer(reviews, many=True)
         return Response(serializer.data)
 
     def get_permissions(self):    
@@ -44,7 +44,7 @@ class TutorReviewView(viewsets.ViewSet):
 
 # Get all reviews based on student
 class StudentReviewView(generics.ListAPIView):
-    serializer_class = AccessReviewSerializer
+    serializer_class = TutorReviewSerializer
     def get_queryset(self):
         student_profile = get_object_or_404(Profile, user=self.kwargs['pk']).id
         return Review.objects.filter(student_profile=student_profile)

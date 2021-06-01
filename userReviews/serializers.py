@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Review
+from userProfiles.serializers import ProfileReviewSerializer
 
 class AccessReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,8 +10,21 @@ class AccessReviewSerializer(serializers.ModelSerializer):
             'tutor_profile': {'read_only' : True },
             'student_profile': {'read_only' : True }
         }
-        
 
+# When you are reviewed by students
+class StudentReviewSerializer(serializers.ModelSerializer):
+    creator_details = ProfileReviewSerializer(source='student_profile', read_only=True)
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+# When you are reviewing tutors
+class TutorReviewSerializer(serializers.ModelSerializer):
+    creator_details = ProfileReviewSerializer(source='tutor_profile', read_only=True)
+    class Meta:
+        model = Review
+        fields = '__all__'
+        
 class CreateReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review

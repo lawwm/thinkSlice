@@ -29,4 +29,9 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
         'subjects', 'total_tutor_reviews', 'qualifications']
         extra_kwargs = {'user' : {'read_only': True} }
 
-
+# Serializer for getting profile information within review
+class ProfileReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['profile_pic', 'username']
+        extra_kwargs = {'username' : {'read_only': True}, 'profile_pic' : {'read_only': True} }
