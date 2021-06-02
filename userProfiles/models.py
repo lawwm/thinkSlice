@@ -26,7 +26,6 @@ class Profile(models.Model):
     is_student = models.BooleanField(default=False)
 
     # If is_tutor is true
-    tutor_contact = models.CharField(blank=True, max_length=255)
     tutor_whatsapp = models.IntegerField(blank=True, null=True)
     tutor_telegram = models.CharField(max_length=255, blank=True, null=True)
     aggregate_star = models.FloatField(blank=True, null=True)
@@ -42,7 +41,6 @@ class Profile(models.Model):
     #total_student_reviews = models.IntegerField(default=0)
 
     # def clear_tutor(self):
-    #     self.tutor_contact = ''
     #     self.qualifications = ''
     #     self.aggregate_star = None
     #     self.duration_classes = []
