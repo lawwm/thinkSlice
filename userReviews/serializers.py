@@ -26,6 +26,8 @@ class TutorReviewSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class CreateReviewSerializer(serializers.ModelSerializer):
+    creator_details = ProfileReviewSerializer(source='student_profile', read_only=True)
+
     class Meta:
         model = Review
         fields = '__all__'
