@@ -11,14 +11,14 @@ class AccessReviewSerializer(serializers.ModelSerializer):
             'student_profile': {'read_only' : True }
         }
 
-# When you are reviewed by students
+# When you are reviewed by students (who has reviewed the profile)
 class StudentReviewSerializer(serializers.ModelSerializer):
     creator_details = ProfileReviewSerializer(source='student_profile', read_only=True)
     class Meta:
         model = Review
         fields = '__all__'
 
-# When you are reviewing tutors
+# When you are reviewing tutors (who the profile has reviewed)
 class TutorReviewSerializer(serializers.ModelSerializer):
     creator_details = ProfileReviewSerializer(source='tutor_profile', read_only=True)
     class Meta:

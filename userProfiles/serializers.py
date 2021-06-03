@@ -33,5 +33,5 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
 class ProfileReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['profile_pic', 'username']
+        fields = ['profile_pic', 'username', 'user']
         extra_kwargs = {'username' : {'read_only': True}, 'profile_pic' : {'read_only': True} }
