@@ -84,7 +84,6 @@ class GetPatchPutDeleteProfileAPI(TestCase):
     # Patch profile details by id
     def test_edit_profile_details_id(self):
         editData = {
-            "tutor_contact": "12345678",
             "tutor_whatsapp": 12345678,
             "tutor_telegram": "@honestman",
             "aggregate_star": "4.5",
@@ -105,14 +104,12 @@ class GetPatchPutDeleteProfileAPI(TestCase):
             content_type='application/json' ,**self.headers)
         parsed = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(parsed["tutor_contact"], "12345678")
         self.assertEqual(parsed["tutor_whatsapp"], 12345678)
         self.assertEqual(parsed["tutor_telegram"], "@honestman")
         self.assertEqual(parsed["aggregate_star"], 4.5)
 
         # PUT profile clear the profile details while not being the owner
         clearData = {
-                "tutor_contact": "",
                 "tutor_whatsapp": None,
                 "tutor_telegram": None,
                 "aggregate_star": None,

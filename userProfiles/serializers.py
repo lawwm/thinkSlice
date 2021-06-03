@@ -25,7 +25,7 @@ class ProfilePictureSerializer(serializers.ModelSerializer):
 class ProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['tutor_contact', 'tutor_whatsapp', 'tutor_telegram', 'aggregate_star', 'duration_classes', 
+        fields = ['tutor_whatsapp', 'tutor_telegram', 'aggregate_star', 'duration_classes', 
         'subjects', 'total_tutor_reviews', 'qualifications']
         extra_kwargs = {'user' : {'read_only': True} }
 
