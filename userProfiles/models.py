@@ -8,10 +8,14 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 #from django.db.models.lookups import IsNull
 
 # Create your models here.
-
+def emptyList(n):
+        result = list()
+        for x in range(n):
+            result.append(0)
 
 class Profile(models.Model):
     # Default profile information
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -30,7 +34,7 @@ class Profile(models.Model):
     tutor_telegram = models.CharField(max_length=255, blank=True, null=True)
     aggregate_star = models.FloatField(blank=True, null=True)
     duration_classes = ArrayField(models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(12)]), blank=True, null=True)
+        validators=[MinValueValidator(0), MaxValueValidator(12)]), default=emptyList(2))
     subjects = ArrayField(models.CharField(
         max_length=55), blank=True, null=True)
     total_tutor_reviews = models.IntegerField(default=0)
