@@ -33,6 +33,7 @@ class Profile(models.Model):
     tutor_whatsapp = models.IntegerField(blank=True, null=True)
     tutor_telegram = models.CharField(max_length=255, blank=True, null=True)
     aggregate_star = models.FloatField(blank=True, null=True)
+    location = models.CharField(max_length=55, blank=True, null=True)
     duration_classes = ArrayField(models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(12)]), default=emptyList, blank=True)
     subjects = ArrayField(models.CharField(
