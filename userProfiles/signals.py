@@ -11,32 +11,3 @@ from .models import Profile
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance, username=instance.username)
-
-
-@receiver(pre_save, sender=Review)
-def update_rating_post(sender, instance, **kwargs):
-    profile = Profile.objects.get(user=instance.tutor_profile.user)
-    try:
-        review = Review.objects.get(id=instance.id)
-        profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews -
-                                  review.star_rating + instance.star_rating) / profile.total_tutor_reviews
-    except:
-        if (profile.aggregate_star == None):
-            profile.aggregate_star = instance.star_rating
-        else:
-            profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews +
-                                      instance.star_rating) / (profile.total_tutor_reviews + 1)
-        profile.total_tutor_reviews = F('total_tutor_reviews') + 1
-    profile.save()
-
-
-@ receiver(post_delete, sender=Review)
-def update_rating_delete(sender, instance, **kwargs):
-    profile = Profile.objects.get(user=instance.tutor_profile.user)
-    if (profile.total_tutor_reviews == 1):
-        profile.aggregate_star = None
-    else:
-        profile.aggregate_star = ((profile.aggregate_star * profile.total_tutor_reviews) -
-                                  instance.star_rating) / (profile.total_tutor_reviews - 1)
-    profile.total_tutor_reviews = F('total_tutor_reviews') - 1
-    profile.save()

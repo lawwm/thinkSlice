@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -40,6 +41,7 @@ class Profile(models.Model):
         max_length=55), blank=True, null=True)
     total_tutor_reviews = models.IntegerField(default=0)
     qualifications = models.CharField(blank=True, max_length=255)
+
     #schedule = models.ArrayField()
 
     # If is_student is true

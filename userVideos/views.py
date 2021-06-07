@@ -3,10 +3,11 @@ from mux_python.models.asset import Asset
 from rest_framework import serializers, viewsets, status, mixins, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-import mux_python 
-from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer
+import mux_python
+from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, LikeVideoSerializer, VideoCommentSerializer, AccessCommentSerializer
+from django.contrib.auth.models import User
 from userProfiles.models import Profile
-from .models import Video
+from .models import Video, VideoComments, VideoLikes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.permissions import IsVideoOwnerOrReadOnly
 from appmanager.settings import MUX_TOKEN_SECRET, MUX_TOKEN_ID
@@ -14,7 +15,9 @@ from mux_python.rest import NotFoundException
 
 # Create your views here.
 
-# Create direct url 
+# Create direct url
+
+
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def UploadVideo(request):
@@ -27,21 +30,27 @@ def UploadVideo(request):
         configuration.password = MUX_TOKEN_SECRET
 
         # API Client Initialization
-        uploads_api = mux_python.DirectUploadsApi(mux_python.ApiClient(configuration))
-        
+        uploads_api = mux_python.DirectUploadsApi(
+            mux_python.ApiClient(configuration))
+
         # Return url api for direct upload
-        create_asset_request = mux_python.CreateAssetRequest(playback_policy=[mux_python.PlaybackPolicy.PUBLIC])
+        create_asset_request = mux_python.CreateAssetRequest(
+            playback_policy=[mux_python.PlaybackPolicy.PUBLIC])
         create_upload_request = mux_python.CreateUploadRequest(timeout=3600, new_asset_settings=create_asset_request,
-             cors_origin="thinkslice.vercel.app", test=False)
-        create_upload_response = uploads_api.create_direct_upload(create_upload_request)  
-        
+                                                               cors_origin="thinkslice.vercel.app", test=False)
+        create_upload_response = uploads_api.create_direct_upload(
+            create_upload_request)
+
         print(create_upload_response)
         serialized = UploadResponseSerializer(create_upload_response.data)
         return Response(serialized.data)
 
 # Upload video to mux using direct url
+
+
 class AssetView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
+
     def create(self, request, *args, **kwargs):
         # Authentication Setup
         configuration = mux_python.Configuration()
@@ -49,14 +58,15 @@ class AssetView(viewsets.ViewSet):
         configuration.password = MUX_TOKEN_SECRET
 
         # API Clients Initialization
-        uploads_api = mux_python.DirectUploadsApi(mux_python.ApiClient(configuration))
+        uploads_api = mux_python.DirectUploadsApi(
+            mux_python.ApiClient(configuration))
         assets_api = mux_python.AssetsApi(mux_python.ApiClient(configuration))
-        
+
         # GET asset_id to query asset
         upload_response = uploads_api.get_direct_upload(kwargs['upload_id'])
         if upload_response.data.status != 'asset_created':
-            return Response("The video was not successfully uploaded, please try again.", 
-                status=status.HTTP_404_NOT_FOUND)
+            return Response("The video was not successfully uploaded, please try again.",
+                            status=status.HTTP_404_NOT_FOUND)
         asset_id = upload_response.data.asset_id
 
         # GET asset using asset_id
@@ -66,7 +76,8 @@ class AssetView(viewsets.ViewSet):
         print(request.data)
 
         # Append API data to request data
-        request.data['creator_profile'] = get_object_or_404(Profile, user=request.user.id).id
+        request.data['creator_profile'] = get_object_or_404(
+            Profile, user=request.user.id).id
         request.data['asset_id'] = asset_id
         request.data['playback_id'] = asset_response.data.playback_ids[0].id
         #request.data['duration'] = asset_response.data.duration
@@ -76,11 +87,11 @@ class AssetView(viewsets.ViewSet):
         print(request.data)
 
         # Check if same profile has created a video for the same subject
-        check_existing = Video.objects.filter(creator_profile = request.data['creator_profile'], 
-            subject=request.data['subject'])
+        check_existing = Video.objects.filter(creator_profile=request.data['creator_profile'],
+                                              subject=request.data['subject'])
         if check_existing.exists():
-            return Response("You've already created a video for this particular subject", 
-                status=status.HTTP_400_BAD_REQUEST)
+            return Response("You've already created a video for this particular subject",
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Create serializer
         serializer = CreateVideoSerializer(data=request.data)
@@ -92,19 +103,19 @@ class AssetView(viewsets.ViewSet):
 
 # Get/Edit/Delete a video from video_id
 class GetEditDeleteVideoView(viewsets.ViewSet):
-    
+
     def retrieve(self, request, *args, **kwargs):
         print(self.request.method)
-        video = get_object_or_404(Video, pk=self.kwargs['pk'])   
+        video = get_object_or_404(Video, pk=self.kwargs['pk'])
         video.views = video.views + 1
-        video.save()
         serializer = DisplayVideoSerializer(video)
         return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
-        video = get_object_or_404(Video, pk=self.kwargs['pk'])  
+        video = get_object_or_404(Video, pk=self.kwargs['pk'])
         self.check_object_permissions(self.request, video)
-        serializer = DisplayVideoSerializer(video, data = request.data, partial=True, many=False)
+        serializer = DisplayVideoSerializer(
+            video, data=request.data, partial=True, many=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -121,7 +132,7 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
 
         # Delete asset_id
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
-        
+
         # Check that asset is gone
         try:
             assets_api.delete_asset(video.asset_id)
@@ -131,21 +142,23 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
         except NotFoundException as e:
             assert e != None
             return Response("Asset does not exist", status=status.HTTP_424_FAILED_DEPENDENCY)
-            
+
     def get_permissions(self):
         if self.action == 'retrieve':
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated, IsVideoOwnerOrReadOnly]
         return [permission() for permission in permission_classes]
-            
+
 # Get 10 videos ordered either by views or data
 # Query videos from numbers
 # n is the set of 9 videos
 # Either filter by 'created_at' or 'views'
 # ascending is boolean, so either 'true' or 'false'
+
+
 class listAllUserVideosView(viewsets.ViewSet):
-#     serializer_class = ProfileVideoSerializer
+    #     serializer_class = ProfileVideoSerializer
     def list(self, request):
         limit_n = request.GET.get('n', 1)
         filter_by = request.GET.get('filter_by', 'created_at')
@@ -158,4 +171,77 @@ class listAllUserVideosView(viewsets.ViewSet):
         serializer = DisplayVideoSerializer(videos, many=True)
         return Response(serializer.data)
 
+# Like a video from video_id
+
+
+class videoLikesView(viewsets.ViewSet):
+
+    def like(self, request, *args, **kwargs):
+        video = get_object_or_404(Video, id=kwargs['pk'])
+        request.data['liked_video'] = video.id
+        request.data['user_liking'] = get_object_or_404(
+            User, id=request.user.id).id
+        serializer = LikeVideoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        print("liked")
+        video.likes = video.likes + 1
+        video.save()
+        return Response(serializer.data)
+
+    def unlike(self, request, *args, **kwargs):
+        like = get_object_or_404(
+            VideoLikes, liked_video=kwargs['pk'], user_liking=request.user.id)
+        video = get_object_or_404(Video, id=kwargs['pk'])
+        try:
+            unliked = like.delete()
+            print(unliked)
+            video.likes = video.likes - 1
+            video.save()
+            return Response("Like removed", status=status.HTTP_200_OK)
+        except NotFoundException as e:
+            assert e != None
+            return Response("Video or like does not exist", status=status.HTTP_424_FAILED_DEPENDENCY)
+
+# Comment on a video from video_id
+
+
+class videoCommentsView(viewsets.ViewSet):
+
+    def addComment(self, request, *args, **kwargs):
+        request.data['commented_video'] = get_object_or_404(
+            Video, id=kwargs['pk']).id
+        request.data['user_commenting'] = get_object_or_404(
+            User, id=request.user.id).id
+        serializer = VideoCommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    
+    def list(self, request, *args, **kwargs):
+        video_id = get_object_or_404(Video, id=kwargs['pk']).id
+        comments = VideoComments.objects.filter(commented_video=video_id)
+        serializer = VideoCommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+# Get/Edit/Delete one comment
+
+
+class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    serializer_class = AccessCommentSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        request.data["edited"] = True
+        return self.partial_update(request, *args, **kwargs)
+
+    def get_object(self):
+        comment = get_object_or_404(VideoComments, pk=self.kwargs['pk'])
+        self.check_object_permissions(self.request, comment)
+        return comment
 
