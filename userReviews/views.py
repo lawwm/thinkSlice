@@ -9,17 +9,21 @@ from accounts.permissions import IsReviewerOrReadOnly
 # Create your views here.
 
 # Create review/ list all tutor's reviews
+
+
 class TutorReviewView(viewsets.ViewSet):
     # serializer_class = CreateReviewSerializer
 
     def create(self, request, *args, **kwargs):
         # Get tutor and student profile
-        request.data['tutor_profile'] = get_object_or_404(Profile, user=kwargs['pk']).id
-        request.data['student_profile'] = get_object_or_404(Profile, user=request.user.id).id
+        profile = get_object_or_404(Profile, user=kwargs['pk'])
+        request.data['tutor_profile'] = profile.id
+        request.data['student_profile'] = get_object_or_404(
+            Profile, user=request.user.id).id
 
         # Check that student hasn't already reviewed the teacher
-        check_existing = Review.objects.filter(tutor_profile=request.data['tutor_profile'], 
-            student_profile=request.data['student_profile'])
+        check_existing = Review.objects.filter(tutor_profile=request.data['tutor_profile'],
+                                               student_profile=request.data['student_profile'])
         if check_existing.exists():
             return Response("You've already reviewed this particular user", status=status.HTTP_400_BAD_REQUEST)
 
@@ -27,6 +31,13 @@ class TutorReviewView(viewsets.ViewSet):
         serializer = CreateReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        if (profile.aggregate_star == None):
+            profile.aggregate_star = request.data['star_rating']
+        else:
+            profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews +
+                                      request.data['star_rating'])/(profile.total_tutor_reviews + 1)
+        profile.total_tutor_reviews = profile.total_tutor_reviews + 1
+        profile.save()
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
@@ -35,7 +46,7 @@ class TutorReviewView(viewsets.ViewSet):
         serializer = StudentReviewSerializer(reviews, many=True)
         return Response(serializer.data)
 
-    def get_permissions(self):    
+    def get_permissions(self):
         if self.request.method == 'GET':
             permission_classes = [AllowAny]
         else:
@@ -43,8 +54,11 @@ class TutorReviewView(viewsets.ViewSet):
         return [permission() for permission in permission_classes]
 
 # Get all reviews based on student
+
+
 class StudentReviewView(generics.ListAPIView):
     serializer_class = TutorReviewSerializer
+
     def get_queryset(self):
         student_profile = get_object_or_404(Profile, user=self.kwargs['pk']).id
         return Review.objects.filter(student_profile=student_profile)
@@ -55,16 +69,30 @@ class StudentReviewView(generics.ListAPIView):
 # Get/Edit/Delete one review
 class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
     serializer_class = AccessReviewSerializer
-    
+
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
         # Once patch request accesses endpoint, edited becomes true
         request.data["edited"] = True
+        old_review = Review.objects.get(id=kwargs['pk'])
+        profile = get_object_or_404(Profile, id=old_review.tutor_profile.id)
+        profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews - old_review.star_rating +
+                                  request.data['star_rating'])/profile.total_tutor_reviews
+        profile.save()
         return self.partial_update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        review = Review.objects.get(id=kwargs['pk'])
+        profile = get_object_or_404(Profile, id=review.tutor_profile.id)
+        profile.total_tutor_reviews = profile.total_tutor_reviews - 1
+        if (profile.total_tutor_reviews == 0):
+            profile.aggregate_star = None
+        else:
+            profile.aggregate_star = (profile.aggregate_star * (profile.total_tutor_reviews + 1) -
+                                      request.data['star_rating'])/profile.total_tutor_reviews
+        profile.save()
         return self.destroy(request, *args, **kwargs)
 
     def get_object(self):
@@ -73,10 +101,9 @@ class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin
         return review
 
     def get_permissions(self):
-        
+
         if self.request.method == 'GET':
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated, IsReviewerOrReadOnly]
         return [permission() for permission in permission_classes]
-
