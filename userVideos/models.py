@@ -37,3 +37,6 @@ class VideoComments(models.Model):
     date_comment = models.DateField(auto_now_add=True)
     date_comment_edited = models.DateField(auto_now=True)
     edited = models.BooleanField(default=False)
+    has_replies = models.BooleanField(default=False)
+    parent_comment = models.ForeignKey("VideoComments", on_delete=models.CASCADE, blank=True, null=True)
+

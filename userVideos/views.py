@@ -220,8 +220,32 @@ class videoCommentsView(viewsets.ViewSet):
     
     def list(self, request, *args, **kwargs):
         video_id = get_object_or_404(Video, id=kwargs['pk']).id
-        comments = VideoComments.objects.filter(commented_video=video_id)
+        comments = VideoComments.objects.filter(commented_video=video_id, parent_comment=None)
         serializer = VideoCommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+# Get the replies to a comment
+
+class commentRepliesView(viewsets.ViewSet):
+
+    def reply(self, request, *args, **kwargs):
+        comment = get_object_or_404(VideoComments, id=kwargs['pk'])
+        request.data['commented_video'] = comment.commented_video.id
+        request.data['parent_comment'] = comment.id
+        request.data['user_commenting'] = get_object_or_404(
+            User, id=request.user.id).id
+        serializer = VideoCommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        if (not comment.has_replies):
+            comment.has_replies = True
+            comment.save()
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        comment_id = get_object_or_404(VideoComments, id=kwargs['pk']).id
+        replies = VideoComments.objects.filter(parent_comment=comment_id)
+        serializer = VideoCommentSerializer(replies, many=True)
         return Response(serializer.data)
 
 # Get/Edit/Delete one comment
