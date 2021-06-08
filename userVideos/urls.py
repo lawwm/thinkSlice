@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import UploadVideo, AssetView, GetEditDeleteVideoView, listAllUserVideosView, videoLikesView, videoCommentsView, GetEditDeleteCommentView
+from .views import UploadVideo, AssetView, GetEditDeleteVideoView, listAllUserVideosView, videoLikesView, videoCommentsView, GetEditDeleteCommentView, commentRepliesView
 
 AssetViewAsView = AssetView.as_view({
     'post': 'create'
@@ -25,6 +25,11 @@ videoCommentsAsView = videoCommentsView.as_view({
     'get': 'list'
 })
 
+commentRepliesAsView = commentRepliesView.as_view({
+    'post': 'reply',
+    'get': 'list'
+})
+
 urlpatterns = [
     path('api/videos/assets', UploadVideo, name='direct_url'),
     path('api/videos/assets/<str:upload_id>',
@@ -34,5 +39,8 @@ urlpatterns = [
     path('api/videos/likes/<int:pk>', videoLikesAsView, name='video_likes'),
     path('api/videos/comments/<int:pk>',
          videoCommentsAsView, name='comment_view'),
-    path('api/comments/<int:pk>', GetEditDeleteCommentView.as_view(), name='handle_comment')
+    path('api/comments/<int:pk>',
+         GetEditDeleteCommentView.as_view(), name='handle_comment'),
+    path('api/comments/replies/<int:pk>',
+         commentRepliesAsView, name='comment_replies')
 ]
