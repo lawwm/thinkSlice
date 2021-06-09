@@ -36,6 +36,9 @@ class LikeVideoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VideoCommentSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True, source="user_commenting.username")
+    profilePic = serializers.URLField(read_only=True, source="user_commenting.profile_pic")
+    userId = serializers.IntegerField(read_only=True, source="user_commenting.user.id")
     class Meta:
         model = VideoComments
         fields = '__all__'
