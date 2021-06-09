@@ -32,7 +32,7 @@ class VideoLikes(models.Model):
 
 class VideoComments(models.Model):
     commented_video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name="commented_video")
-    user_commenting = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_commenting")
+    user_commenting = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="user_commenting")
     comment_text = models.TextField()
     date_comment = models.DateField(auto_now_add=True)
     date_comment_edited = models.DateField(auto_now=True)

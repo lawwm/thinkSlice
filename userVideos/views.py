@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from userProfiles.models import Profile
 from .models import Video, VideoComments, VideoLikes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from accounts.permissions import IsVideoOwnerOrReadOnly
+from accounts.permissions import IsVideoOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 from appmanager.settings import MUX_TOKEN_SECRET, MUX_TOKEN_ID
 from mux_python.rest import NotFoundException
 
@@ -209,13 +209,16 @@ class videoLikesView(viewsets.ViewSet):
 class videoCommentsView(viewsets.ViewSet):
 
     def addComment(self, request, *args, **kwargs):
-        request.data['commented_video'] = get_object_or_404(
-            Video, id=kwargs['pk']).id
+        video = get_object_or_404(
+            Video, id=kwargs['pk'])
+        request.data['commented_video'] = video.id
         request.data['user_commenting'] = get_object_or_404(
             User, id=request.user.id).id
         serializer = VideoCommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        video.num_of_comments = video.num_of_comments + 1
+        video.save()
         return Response(serializer.data)
     
     def list(self, request, *args, **kwargs):
@@ -230,7 +233,8 @@ class commentRepliesView(viewsets.ViewSet):
 
     def reply(self, request, *args, **kwargs):
         comment = get_object_or_404(VideoComments, id=kwargs['pk'])
-        request.data['commented_video'] = comment.commented_video.id
+        video = get_object_or_404(Video, id=comment.commented_video.id)
+        request.data['commented_video'] = video.id
         request.data['parent_comment'] = comment.id
         request.data['user_commenting'] = get_object_or_404(
             User, id=request.user.id).id
@@ -240,6 +244,8 @@ class commentRepliesView(viewsets.ViewSet):
         if (not comment.has_replies):
             comment.has_replies = True
             comment.save()
+        video.num_of_comments = video.num_of_comments + 1
+        video.save()
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
@@ -258,9 +264,14 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        comment = get_object_or_404(VideoComments, id=kwargs['pk'])
+        video = get_object_or_404(Video, id=comment.commented_video.id)
+        video.num_of_comments = video.num_of_comments - 1
+        video.save()
         return self.destroy(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
+        print(request.data)
         request.data["edited"] = True
         return self.partial_update(request, *args, **kwargs)
 
@@ -268,4 +279,13 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         comment = get_object_or_404(VideoComments, pk=self.kwargs['pk'])
         self.check_object_permissions(self.request, comment)
         return comment
+
+    def get_permissions(self):
+
+        if self.request.method == 'GET':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated, IsCommentOwnerOrReadOnly]
+        return [permission() for permission in permission_classes]
+
 
