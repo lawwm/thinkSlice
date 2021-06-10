@@ -268,6 +268,12 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         video = get_object_or_404(Video, id=comment.commented_video.id)
         video.num_of_comments = video.num_of_comments - 1
         video.save()
+        if (not comment.parent_comment == None):
+            parent_comment = get_object_or_404(VideoComments, id=comment.parent_comment.id)
+            reply_count = VideoComments.objects.filter(parent_comment=parent_comment.id).count()
+            if (reply_count == 1):
+                parent_comment.has_replies = 0
+                parent_comment.save()
         return self.destroy(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
