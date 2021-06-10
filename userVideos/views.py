@@ -237,7 +237,7 @@ class commentRepliesView(viewsets.ViewSet):
         request.data['commented_video'] = video.id
         request.data['parent_comment'] = comment.id
         request.data['user_commenting'] = get_object_or_404(
-            User, id=request.user.id).id
+            Profile, user_id=request.user.id).id
         serializer = VideoCommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

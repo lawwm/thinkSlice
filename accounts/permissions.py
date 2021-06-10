@@ -47,7 +47,7 @@ class IsCommentOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to the owner of the object.
-        return request.user.id == obj.user_commenting.id
+        return request.user.id == obj.user_commenting.user_id
 
 class IsVideoOwnerOrReadOnly(permissions.BasePermission):
     """
