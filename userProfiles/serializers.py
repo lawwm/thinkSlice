@@ -8,7 +8,7 @@ class ProfileGeneralSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'profile_pic', 'username', 'user_bio', 'is_tutor', "is_student", 'user', 'video']
+        fields = ['id', 'profile_pic', 'username', 'user_bio', 'is_tutor', "is_student", 'user', 'video', 'available']
         extra_kwargs = {'user' : {'read_only': True}, 'profile_pic' : {'read_only': True} }
 
 class ProfilePictureSerializer(serializers.ModelSerializer):
@@ -26,7 +26,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['tutor_whatsapp', 'tutor_telegram', 'aggregate_star', 'location', 'duration_classes', 
-        'subjects', 'total_tutor_reviews', 'qualifications']
+        'subjects', 'total_tutor_reviews', 'qualifications', ]
         extra_kwargs = {'user' : {'read_only': True}, 'aggregate_star': {'read_only': True} }
 
 # Serializer for getting profile information within review

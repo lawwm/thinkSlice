@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG') == 'True'
 print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['.localhost:3000', ".thinkslice.vercel.app/"]
+ALLOWED_HOSTS = ['localhost', ".thinkslice.vercel.app/"]
 
 
 # Application definition

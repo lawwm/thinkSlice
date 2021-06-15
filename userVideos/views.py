@@ -161,13 +161,13 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
 
 
 class listAllUserVideosView(viewsets.ViewSet):
-    #     serializer_class = ProfileVideoSerializer
     def list(self, request):
+        # Get query params
         subject = request.GET.get('subject', None)
         location = request.GET.get('location', None)
         star_upper_limit = request.GET.get('star_upper_limit', None)
         star_lower_limit = request.GET.get('star_lower_limit', None)
-
+        available = request.GET.get('available', None)
         limit_n = request.GET.get('n', 1)
         filter_by = request.GET.get('filter_by', 'created_at')
         ascending = request.GET.get('ascending', 'true')
@@ -176,6 +176,7 @@ class listAllUserVideosView(viewsets.ViewSet):
         if ascending != 'true':
             filter_by = '-' + filter_by
 
+        # Append to filter criteria
         q = Q()
         if subject != None:
             q &= Q(subject__icontains=subject)
@@ -185,7 +186,10 @@ class listAllUserVideosView(viewsets.ViewSet):
             q &= Q(creator_profile__aggregate_star__lte=star_upper_limit)
         if star_lower_limit != None:
             q &= Q(creator_profile__aggregate_star__gte=star_lower_limit)
+        if available != None:
+            q &= Q(creator_profile__available=available)
 
+        # Return filtered videos
         videos = Video.objects.filter(q).order_by(filter_by)[index_head:index_tail]
         serializer = DisplayVideoSerializer(videos, many=True)
         return Response(serializer.data)
