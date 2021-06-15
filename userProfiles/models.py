@@ -29,6 +29,7 @@ class Profile(models.Model):
         blank=True, default='Hi, welcome to my profile!')
     is_tutor = models.BooleanField(default=False)
     is_student = models.BooleanField(default=True)
+    # available = models.BooleanField(default=True)
 
     # If is_tutor is true
     tutor_whatsapp = models.IntegerField(blank=True, null=True)
@@ -52,3 +53,6 @@ class Profile(models.Model):
     #     self.aggregate_star = None
     #     self.duration_classes = []
     #     self.subjects = []
+
+class Similarity(models.Func):
+    function = "similarity"

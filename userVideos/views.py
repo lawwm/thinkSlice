@@ -1,3 +1,4 @@
+from django.db.models.fields import CharField
 from django.shortcuts import get_object_or_404
 from mux_python.models.asset import Asset
 from rest_framework import serializers, viewsets, status, mixins, generics
@@ -7,12 +8,14 @@ import mux_python
 from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, LikeVideoSerializer, VideoCommentSerializer, AccessCommentSerializer
 from django.contrib.auth.models import User
 from userProfiles.models import Profile
-from .models import Video, VideoComments, VideoLikes
+from .models import Video, VideoComments, VideoLikes, Similarity
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.permissions import IsVideoOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 from appmanager.settings import MUX_TOKEN_SECRET, MUX_TOKEN_ID
 from mux_python.rest import NotFoundException
-
+from django.db import models
+from django.db.models.functions import Greatest
+from django.db.models import Q
 # Create your views here.
 
 # Create direct url
@@ -160,6 +163,11 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
 class listAllUserVideosView(viewsets.ViewSet):
     #     serializer_class = ProfileVideoSerializer
     def list(self, request):
+        subject = request.GET.get('subject', None)
+        location = request.GET.get('location', None)
+        star_upper_limit = request.GET.get('star_upper_limit', None)
+        star_lower_limit = request.GET.get('star_lower_limit', None)
+
         limit_n = request.GET.get('n', 1)
         filter_by = request.GET.get('filter_by', 'created_at')
         ascending = request.GET.get('ascending', 'true')
@@ -167,7 +175,18 @@ class listAllUserVideosView(viewsets.ViewSet):
         index_head = index_tail - 9
         if ascending != 'true':
             filter_by = '-' + filter_by
-        videos = Video.objects.order_by(filter_by)[index_head:index_tail]
+
+        q = Q()
+        if subject != None:
+            q &= Q(subject__icontains=subject)
+        if location != None:
+            q &= Q(creator_profile__location__icontains=location)
+        if star_upper_limit != None:
+            q &= Q(creator_profile__aggregate_star__lte=star_upper_limit)
+        if star_lower_limit != None:
+            q &= Q(creator_profile__aggregate_star__gte=star_lower_limit)
+
+        videos = Video.objects.filter(q).order_by(filter_by)[index_head:index_tail]
         serializer = DisplayVideoSerializer(videos, many=True)
         return Response(serializer.data)
 
@@ -295,3 +314,36 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         return [permission() for permission in permission_classes]
 
 
+class SearchVideoView(viewsets.ViewSet):
+    def list(self, request):
+        search_name = request.GET.get('name', None)
+        if search_name == None:
+            return Response('No input was detected.', status=400)
+        videos = Video.objects.annotate(
+            match=Greatest(
+                Similarity("video_title", models.Value(search_name)), 
+                Similarity("creator_profile__username", models.Value(search_name)),
+                output_field=CharField()
+            )
+        ).filter(match__gt=0.20)
+        serializers = DisplayVideoSerializer(videos, many=True)
+        return Response(serializers.data)
+
+class FilterVideoView(viewsets.ViewSet):
+    def list(self, request):
+        subject = request.GET.get('subject', None)
+        location = request.GET.get('location', None)
+        star_upper_limit = request.GET.get('star_upper_limit', None)
+        star_lower_limit = request.GET.get('star_lower_limit', None)
+        q = Q()
+        if subject != None:
+            q &= Q(subject__icontains=subject)
+        if location != None:
+            q &= Q(creator_profile__location__icontains=location)
+        if star_upper_limit != None:
+            q &= Q(creator_profile__aggregate_star__lte=star_upper_limit)
+        if star_lower_limit != None:
+            q &= Q(creator_profile__aggregate_star__gte=star_lower_limit)
+        videos = Video.objects.filter(q)
+        serializers = DisplayVideoSerializer(videos, many=True)
+        return Response(serializers.data)

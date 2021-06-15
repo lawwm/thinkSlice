@@ -78,6 +78,8 @@ class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin
         request.data["edited"] = True
         old_review = Review.objects.get(id=kwargs['pk'])
         profile = get_object_or_404(Profile, id=old_review.tutor_profile.id)
+        if (type(request.data['star_rating']) == str):
+            request.data['star_rating'] = float(request.data['star_rating'])
         profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews - old_review.star_rating +
                                   request.data['star_rating'])/profile.total_tutor_reviews
         profile.save()
@@ -85,13 +87,16 @@ class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin
 
     def delete(self, request, *args, **kwargs):
         review = Review.objects.get(id=kwargs['pk'])
+        student_profile = get_object_or_404(Profile, id=review.student_profile.id)
+        if (student_profile.user_id != request.user.id):
+            return Response("You do not have access to this review", status=403)
         profile = get_object_or_404(Profile, id=review.tutor_profile.id)
         profile.total_tutor_reviews = profile.total_tutor_reviews - 1
         if (profile.total_tutor_reviews == 0):
             profile.aggregate_star = None
         else:
             profile.aggregate_star = (profile.aggregate_star * (profile.total_tutor_reviews + 1) -
-                                      request.data['star_rating'])/profile.total_tutor_reviews
+                                        review.star_rating)/profile.total_tutor_reviews
         profile.save()
         return self.destroy(request, *args, **kwargs)
 

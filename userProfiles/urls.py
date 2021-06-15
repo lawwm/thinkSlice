@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import AllProfileView, ProfileView, DetailProfileView
+from .views import AllProfileView, ProfileView, DetailProfileView, SearchProfileView
 from rest_framework import routers
 
 
@@ -16,8 +16,14 @@ DetailProfileViewAsView = DetailProfileView.as_view({
     'put': 'update'
 })
 
+SearchProfileViewAsView = SearchProfileView.as_view({
+    'get': 'list',
+})
+
+
 urlpatterns = [ 
     path('api/profiles', AllProfileView.as_view(), name='all_profile'),
     path('api/profiles/<int:pk>', ProfileViewAsView , name='one_profile'),
-    path('api/profiles/details/<int:pk>', DetailProfileViewAsView , name='one_detail_profile')
+    path('api/profiles/details/<int:pk>', DetailProfileViewAsView , name='one_detail_profile'),
+    path('api/profiles/search', SearchProfileViewAsView, name='search_profile'),
 ]
