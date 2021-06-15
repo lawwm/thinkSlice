@@ -1,16 +1,18 @@
+from django.db.models.fields import CharField
 from django.shortcuts import render
 from rest_framework import generics, serializers, permissions, viewsets
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from .serializers import ProfileGeneralSerializer, ProfileDetailSerializer, ProfilePictureSerializer
-from .models import Profile
+from .serializers import ProfileGeneralSerializer, ProfileDetailSerializer, ProfilePictureSerializer, ProfileReviewSerializer
+from .models import Profile, Similarity
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from accounts.permissions import IsOwnerOrReadOnly
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser, FileUploadParser
-
+from django.contrib.postgres.search import SearchVector
+from django.db import models
 
 class AllProfileView(APIView):
     # GET all profiles
@@ -31,10 +33,8 @@ class ProfileView(viewsets.ViewSet):
 
     # Upload profile picture to S3
     def create(self, request, *args, **kwargs):
-        print(request.data['profile_pic'])
         profiles = get_object_or_404(Profile, user=kwargs['pk'])
         self.check_object_permissions(self.request, profiles)
-        print("hello there")
         serializers = ProfilePictureSerializer(profiles, data=request.data)
         if serializers.is_valid(raise_exception=True):
             serializers.save()
@@ -93,8 +93,7 @@ class DetailProfileView(viewsets.ViewSet):
         data = {
                     "tutor_whatsapp": None,
                     "tutor_telegram": None,
-                    "aggregate_star": None,
-                    "duration_classes": None,
+                    "duration_classes": [0, 0],
                     "subjects": None,
                     "qualifications": ""
                 }
@@ -112,3 +111,14 @@ class DetailProfileView(viewsets.ViewSet):
         else:
             permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
         return [permission() for permission in permission_classes]
+
+class SearchProfileView(viewsets.ViewSet):
+    def list(self, request):
+        search_name = request.GET.get('name', None)
+        if search_name == None:
+            return Response('No input was detected.', status=400)
+        profiles = Profile.objects.annotate(
+            match=Similarity("username", models.Value(search_name)), 
+        ).filter(match__gt=0.20)
+        serializers = ProfileReviewSerializer(profiles, many=True)
+        return Response(serializers.data)

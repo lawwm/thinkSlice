@@ -40,3 +40,5 @@ class VideoComments(models.Model):
     has_replies = models.BooleanField(default=False)
     parent_comment = models.ForeignKey("VideoComments", on_delete=models.CASCADE, blank=True, null=True)
 
+class Similarity(models.Func):
+    function = "similarity"

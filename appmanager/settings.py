@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG') == 'True'
 print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['.localhost:3000', ".thinkslice.vercel.app/"]
+ALLOWED_HOSTS = ['localhost', ".thinkslice.vercel.app/"]
 
 
 # Application definition
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'rest_framework',
     'knox',
     'accounts',
