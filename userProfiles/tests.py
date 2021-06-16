@@ -25,19 +25,32 @@ class GetPatchPutDeleteProfileAPI(TestCase):
             "username": "jimjam",
             "password": "password"            
         }
+        review_data = {
+            "star_rating": "1",
+            "review_title": "shit teacher",
+            "review_essay": "No talent for teaching"    
+        }
         cls.registerData = registerData
         cls.loginData = loginData
+        cls.review_data = review_data
 
     def setUp(self):
+        # Register test users
         response = self.client.post("/api/auth/register", data=self.registerData[0])
-        self.client.post("/api/auth/register", data=self.registerData[1])
+        studentResponse = self.client.post("/api/auth/register", data=self.registerData[1])
         self.client.post("/api/auth/register", data=self.registerData[2])
 
+        # Parse data
         parsed = json.loads(response.content)
+        studentParsed = json.loads(studentResponse.content)
+
         self.user_id = parsed["user"]["id"]
-        # self.token = parsed["token"]
         self.headers = {
             "HTTP_AUTHORIZATION": "Token " + parsed["token"]
+        }
+        self.student_id = studentParsed["user"]["id"]
+        self.student_headers = {
+            "HTTP_AUTHORIZATION": "Token " + studentParsed["token"]
         }
 
     #Get all profiles
@@ -89,11 +102,14 @@ class GetPatchPutDeleteProfileAPI(TestCase):
             "aggregate_star": "4.5",
         }
 
+        # POST post review so aggregate star changes
+        self.client.post('/api/reviews/tutors/' + str(self.user_id), data=self.review_data,
+            content_type='application/json', **self.student_headers )
+
         # GET initial profile detail to compare wtih edited profile
         initialResponse = self.client.get('/api/profiles/details/' + str(self.user_id))
         initialParsed = json.loads(initialResponse.content)
         self.assertEqual(initialResponse.status_code, 200)
-
         # PATCH profile without being the owner
         notOwnerResponse = self.client.patch('/api/profiles/details/' + str(self.user_id + 1), data=editData,  
             content_type='application/json' ,**self.headers)
@@ -106,23 +122,15 @@ class GetPatchPutDeleteProfileAPI(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(parsed["tutor_whatsapp"], 12345678)
         self.assertEqual(parsed["tutor_telegram"], "@honestman")
-        self.assertEqual(parsed["aggregate_star"], 4.5)
+        # Aggregate star does not change
+        self.assertEqual(parsed["aggregate_star"], 1)
 
-        # PUT profile clear the profile details while not being the owner
-        clearData = {
-                "tutor_whatsapp": None,
-                "tutor_telegram": None,
-                "aggregate_star": None,
-                "duration_classes": None,
-                "subjects": None,
-                "qualifications": ""
-            }
-        clearNotOwnerResponse = self.client.put('/api/profiles/details/' + str(self.user_id + 1), data=clearData,  
+        clearNotOwnerResponse = self.client.put('/api/profiles/details/' + str(self.user_id + 1), data="", 
             content_type='application/json' ,**self.headers)
         self.assertEqual(clearNotOwnerResponse.status_code, 403)
 
         # PUT profile, clear the profile details while being owner
-        clearResponse = self.client.put('/api/profiles/details/' + str(self.user_id), data=clearData,  
+        clearResponse = self.client.put('/api/profiles/details/' + str(self.user_id), data="",
             content_type='application/json' ,**self.headers)
         clearParsed = json.loads(clearResponse.content)
         self.assertEqual(clearResponse.status_code, 200)

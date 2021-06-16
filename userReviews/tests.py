@@ -26,16 +26,20 @@ class GetPatchPutDeleteProfileAPI(TestCase):
         cls.review_data = review_data
 
     def setUp(self):
+        #Register student and tutor accounts
         student_response = self.client.post("/api/auth/register", data=self.register_data[0])
         tutor_response = self.client.post("/api/auth/register", data=self.register_data[1])
 
         student_parsed = json.loads(student_response.content)
         tutor_parsed = json.loads(tutor_response.content)
 
+        #Set student id and authorization headers
         self.student_id = student_parsed["user"]["id"]
         self.student_headers = {
             "HTTP_AUTHORIZATION": "Token " + student_parsed["token"]
         }
+
+        #Set tutor id and authorization headers
         self.tutor_id = tutor_parsed["user"]["id"]
         self.tutor_headers = {
             "HTTP_AUTHORIZATION": "Token " + tutor_parsed["token"]
@@ -55,7 +59,7 @@ class GetPatchPutDeleteProfileAPI(TestCase):
             content_type='application/json')
         self.assertEqual(reviewResponse.status_code, 401)
 
-        # Ensure cannot post twice
+        # Ensure cannot post twice for same user
         reviewResponse = self.client.post('/api/reviews/tutors/' + str(self.tutor_id), data=self.review_data,
             content_type='application/json', **self.student_headers )
         self.assertEqual(reviewResponse.status_code, 400)
@@ -66,18 +70,22 @@ class GetPatchPutDeleteProfileAPI(TestCase):
         self.assertEqual(reviewOwnResponse.status_code, 400)
 
     def test_get_tutor_review(self):
+        # Ensure can get tutor reviews
         response = self.client.get('/api/reviews/tutors/' + str(self.tutor_id))
         self.assertEqual(response.status_code, 200)
 
     def test_get_student_review(self):
+        # Ensure can get student reviews
         response = self.client.get('/api/reviews/students/' + str(self.student_id))
         self.assertEqual(response.status_code, 200)
 
     def test_get_review_by_id(self):
+        # Ensure can get review from id
         response = self.client.get('/api/reviews/' + str(self.review_id))
         self.assertEqual(response.status_code, 200)
 
     def test_edit_review_by_id(self):
+        # Set up edit data
         editData = {
             "star_rating": "2.0",
             "review_title": "Bad, just bad"
@@ -96,7 +104,6 @@ class GetPatchPutDeleteProfileAPI(TestCase):
         self.assertEqual(forbiddenResponse.status_code, 403)
 
     def test_delete_review_by_id(self):
-
         # Returns a status 403 when attempting to delete other's reviews
         forbiddenResponse = self.client.delete('/api/reviews/' + str(self.review_id), data='', 
             content_type='application/json',**self.tutor_headers)
