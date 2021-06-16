@@ -320,7 +320,13 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
 
 class SearchVideoView(viewsets.ViewSet):
     def list(self, request):
+        # Get query params
         search_name = request.GET.get('name', None)
+        filter_by = request.GET.get('filter_by', 'created_at')
+        ascending = request.GET.get('ascending', 'true')
+        if ascending != 'true':
+            filter_by = '-' + filter_by
+    
         if search_name == None:
             return Response('No input was detected.', status=400)
         videos = Video.objects.annotate(
@@ -329,7 +335,7 @@ class SearchVideoView(viewsets.ViewSet):
                 Similarity("creator_profile__username", models.Value(search_name)),
                 output_field=CharField()
             )
-        ).filter(match__gt=0.20)
+        ).filter(match__gt=0.20).order_by(filter_by)
         serializers = DisplayVideoSerializer(videos, many=True)
         return Response(serializers.data)
 
