@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'userProfiles',
     'userVideos',
     'storages',
+    'channels',
     'chat'
 ]
 
@@ -105,16 +106,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'appmanager.wsgi.application'
-# ASGI_APPLICATION = "appmanager.routing.application"
+ASGI_APPLICATION = "appmanager.routing.application"
 
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],
-#         },
-#     },
-# }
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
