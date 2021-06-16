@@ -322,11 +322,16 @@ class SearchVideoView(viewsets.ViewSet):
     def list(self, request):
         # Get query params
         search_name = request.GET.get('name', None)
+        limit_n = request.GET.get('n', 1)
         filter_by = request.GET.get('filter_by', 'created_at')
         ascending = request.GET.get('ascending', 'true')
+
+        # Refine inputs
         if ascending != 'true':
             filter_by = '-' + filter_by
-    
+        index_tail = int(limit_n) * 9
+        index_head = index_tail - 9
+
         if search_name == None:
             return Response('No input was detected.', status=400)
         videos = Video.objects.annotate(
@@ -335,7 +340,7 @@ class SearchVideoView(viewsets.ViewSet):
                 Similarity("creator_profile__username", models.Value(search_name)),
                 output_field=CharField()
             )
-        ).filter(match__gt=0.20).order_by(filter_by)
+        ).filter(match__gt=0.20).order_by(filter_by)[index_head:index_tail]
         serializers = DisplayVideoSerializer(videos, many=True)
         return Response(serializers.data)
 
