@@ -18,6 +18,8 @@ gunicorn = "*"
 django-heroku = "*"
 whitenoise = "*"
 pillow = "*"
+channels = "*"
+channels-redis = "*"
 
 [dev-packages]
 pylint = "*"

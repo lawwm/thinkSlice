@@ -107,7 +107,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'appmanager.wsgi.application'
-ASGI_APPLICATION = "appmanager.routing.application"
+ASGI_APPLICATION = "appmanager.asgi.application"
 
 CHANNEL_LAYERS = {
     'default': {

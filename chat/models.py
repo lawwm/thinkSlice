@@ -7,7 +7,7 @@ from userProfiles.models import Profile
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     message = models.TextField()
-    timestamp = models.TimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 class ChatRoom(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="owner")
