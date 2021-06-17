@@ -246,7 +246,7 @@ class videoCommentsView(viewsets.ViewSet):
     
     def list(self, request, *args, **kwargs):
         video_id = get_object_or_404(Video, id=kwargs['pk']).id
-        comments = VideoComments.objects.filter(commented_video=video_id, parent_comment=None)
+        comments = VideoComments.objects.filter(commented_video=video_id, parent_comment=None).order_by('-date_comment_edited')
         serializer = VideoCommentSerializer(comments, many=True)
         return Response(serializer.data)
 
@@ -273,7 +273,7 @@ class commentRepliesView(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         comment_id = get_object_or_404(VideoComments, id=kwargs['pk']).id
-        replies = VideoComments.objects.filter(parent_comment=comment_id)
+        replies = VideoComments.objects.filter(parent_comment=comment_id).order_by('-date_comment_edited')
         serializer = VideoCommentSerializer(replies, many=True)
         return Response(serializer.data)
 
@@ -326,6 +326,25 @@ class SearchVideoView(viewsets.ViewSet):
         filter_by = request.GET.get('filter_by', 'created_at')
         ascending = request.GET.get('ascending', 'true')
 
+        subject = request.GET.get('subject', None)
+        location = request.GET.get('location', None)
+        star_upper_limit = request.GET.get('star_upper_limit', None)
+        star_lower_limit = request.GET.get('star_lower_limit', None)
+        available = request.GET.get('available', None)
+
+        # Append to filter criteria
+        q = Q()
+        if subject != None:
+            q &= Q(subject__icontains=subject)
+        if location != None:
+            q &= Q(creator_profile__location__icontains=location)
+        if star_upper_limit != None:
+            q &= Q(creator_profile__aggregate_star__lte=star_upper_limit)
+        if star_lower_limit != None:
+            q &= Q(creator_profile__aggregate_star__gte=star_lower_limit)
+        if available != None:
+            q &= Q(creator_profile__available=available)
+
         # Refine inputs
         if ascending != 'true':
             filter_by = '-' + filter_by
@@ -340,7 +359,7 @@ class SearchVideoView(viewsets.ViewSet):
                 Similarity("creator_profile__username", models.Value(search_name)),
                 output_field=CharField()
             )
-        ).filter(match__gt=0.20).order_by(filter_by)[index_head:index_tail]
+        ).filter(q).filter(match__gt=0.20).order_by(filter_by)[index_head:index_tail]
         serializers = DisplayVideoSerializer(videos, many=True)
         return Response(serializers.data)
 

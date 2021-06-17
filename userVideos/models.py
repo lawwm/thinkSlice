@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class Video(models.Model):
     # Create from request.data
     video_title = models.CharField(max_length=70)
-    video_description = models.CharField(max_length=400)
+    video_description = models.CharField(max_length=6000)
     creator_profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="creator_profile")
     subject = models.CharField(max_length = 100)
     views = models.IntegerField(default=0)
