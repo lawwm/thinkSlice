@@ -1,12 +1,13 @@
 from django.urls import path
 
-from .views import ChatRoomView, CreateChatRoomView
+from .views import ChatView, GetEditChatView
 
-CreateChatRoomAsView = CreateChatRoomView.as_view({
-    'post': 'create'
+ChatAsView = ChatView.as_view({
+    'post': 'create',
+    'get': 'list',
 })
 
 urlpatterns = [
-    path('api/chat/<int:pk>', ChatRoomView.as_view(), name='handle_chat'),
-    path('api/chat/create/<int:pk>', CreateChatRoomAsView, name='create_chat'),
+    path('api/chat/<int:pk>', ChatAsView, name='chat_view'),
+    path('api/chat/handle/<int:pk>', GetEditChatView.as_view(), name='handle_chat'),
 ]

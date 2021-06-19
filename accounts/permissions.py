@@ -74,15 +74,5 @@ class IsChatUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
 
         # All permissions are only allowed to either user in the chat.
-        return request.user.id == obj.owner.user_id or request.user.id == obj.recipient.user_id
+        return request.user.id == obj.sender.user_id
 
-class IsChatOwner(permissions.BasePermission):
-    """
-    Custom permission to only allow the owner of a chat room to close the chat room
-    """
-    message = "You are not the owner of this chat room."
-
-    def has_object_permission(self, request, view, obj):
-
-        # All permissions are only allowed to chat room owner.
-        return request.user.id == obj.owner.user_id
