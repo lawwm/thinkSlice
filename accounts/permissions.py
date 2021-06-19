@@ -64,3 +64,15 @@ class IsVideoOwnerOrReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the owner of the object.
         return request.user.id == obj.creator_profile.user_id
+
+class IsChatUser(permissions.BasePermission):
+    """
+    Custom permission to only allow users of a chat room to view its messages
+    """
+    message = "You do not have access to this chat room."
+
+    def has_object_permission(self, request, view, obj):
+
+        # All permissions are only allowed to either user in the chat.
+        return request.user.id == obj.sender.user_id
+
