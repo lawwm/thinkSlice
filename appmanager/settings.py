@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG') == 'True'
 print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['localhost', ".herokuapp.com"]
+ALLOWED_HOSTS = ['localhost', "thinkslice.herokuapp.com"]
 
 
 # Application definition
@@ -67,7 +67,7 @@ REST_FRAMEWORK = {
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://thinkslice.vercel.app"
+    "https://thinkslice.heroku"
 ]
 
 MIDDLEWARE = [
