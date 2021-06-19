@@ -21,6 +21,7 @@ pillow = "*"
 channels = "*"
 channels-redis = "*"
 daphne = "*"
+django-cors-middleware = "*"
 
 [dev-packages]
 pylint = "*"
