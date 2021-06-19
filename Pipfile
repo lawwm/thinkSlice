@@ -20,6 +20,7 @@ whitenoise = "*"
 pillow = "*"
 channels = "*"
 channels-redis = "*"
+daphne = "*"
 
 [dev-packages]
 pylint = "*"

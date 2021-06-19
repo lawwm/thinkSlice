@@ -33,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG') == 'True'
 print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['localhost', ".thinkslice.vercel.app/"]
+ALLOWED_HOSTS = ['localhost', ".herokuapp.com"]
 
 
 # Application definition
@@ -113,7 +113,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
         },
     },
 }
