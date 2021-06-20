@@ -118,7 +118,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
+print(os.environ.get('REDIS_URL'))
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
