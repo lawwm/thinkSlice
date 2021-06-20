@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG') == "True"
 print("DEBUG IS:", DEBUG)
 
-ALLOWED_HOSTS = ['localhost', ".thinkslice.herokuapp.com"]
+ALLOWED_HOSTS = ['localhost', ".herokuapp.com"]
 
 
 # Application definition
