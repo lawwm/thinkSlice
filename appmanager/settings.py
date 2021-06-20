@@ -27,10 +27,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+# SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG') == 'True'
+# DEBUG = env('DEBUG') == 'True'
+DEBUG = os.environ.get('DEBUG') == "True"
 print("DEBUG IS:", DEBUG)
 
 ALLOWED_HOSTS = ['localhost', ".thinkslice.herokuapp.com"]
@@ -85,7 +87,8 @@ MIDDLEWARE = [
 ]
 
 # SECURE_HSTS_SECONDS = 1
-SECURE_SSL_REDIRECT = env('DEBUG') != 'True'
+# SECURE_SSL_REDIRECT = env('DEBUG') != 'True'
+SECURE_SSL_REDIRECT = os.environ.get('DEBUG') != 'True'
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -136,7 +139,7 @@ DATABASES = {
 db_from_env = dj_database_url.config()
 DATABASES['default'].update(db_from_env)
 # DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
-# print([DATABASES['default']])
+print([DATABASES['default']])
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -193,14 +196,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 #MUX tokens
-MUX_TOKEN_ID = env('MUX_TOKEN_ID')
-MUX_TOKEN_SECRET = env('MUX_TOKEN_SECRET')
-
+# MUX_TOKEN_ID = env('MUX_TOKEN_ID')
+# MUX_TOKEN_SECRET = env('MUX_TOKEN_SECRET')
+MUX_TOKEN_ID = os.environ.get('MUX_TOKEN_ID')
+MUX_TOKEN_SECRET = os.environ.get('MUX_TOKEN_SECRET')
 
 #AWS S3
-AWS_ACCESS_KEY_ID=env('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY=env('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME=env('AWS_STORAGE_BUCKET_NAME')
+# AWS_ACCESS_KEY_ID=env('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY=env('AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME=env('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME=os.environ.get('AWS_STORAGE_BUCKET_NAME')
+
 
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
