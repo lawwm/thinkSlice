@@ -72,3 +72,17 @@ class GetEditChatView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generi
     def get_permissions(self):
         permission_classes = [IsAuthenticated, IsChatUser]
         return [permission() for permission in permission_classes]
+
+# Get chat using chatroom_id
+
+class ChatRoomView(viewsets.ViewSet):
+    def retrieve(self, request, *args, **kwargs):
+        permission_classes = [IsAuthenticated, IsChatUser]
+
+        sender = get_object_or_404(Profile, user=request.user.id)
+        chatroom = get_object_or_404(ChatRoom, id=kwargs['pk'])
+
+        chat = get_object_or_404(
+                Chat, sender=sender, chatroom=chatroom)
+        serializer = ChatSerializer(chat)
+        return Response(serializer.data)
