@@ -67,7 +67,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:3000",
 #     "https://thinkslice.vercel.app"
@@ -113,11 +113,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'appmanager.wsgi.application'
 ASGI_APPLICATION = "appmanager.asgi.application"
 
+redis_host = os.environ.get('REDIS_URL') or ('127.0.0.1', 6379)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [os.environ.get('REDIS_URL')],
+            "hosts": [redis_host],
         },
     },
 }
