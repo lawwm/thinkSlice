@@ -50,7 +50,7 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(message))
 
     def fetch_messages(self, data):
-        messages = get_last_10_messages(data['chatId'])
+        messages = get_last_10_messages(data['chatId'], data['page'])
         content = {
             'command': 'messages',
             'messages': self.messages_to_json(messages)
@@ -93,4 +93,5 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from room group
     def chat_message(self, event):
         message = event['message']
+        print(message)
         self.send(text_data=json.dumps(message))
