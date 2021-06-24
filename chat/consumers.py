@@ -7,7 +7,7 @@ import json
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from .models import Message, ChatRoom
-from .views import get_last_10_messages
+from .views import get_20_messages
 
 User = get_user_model()
 
@@ -47,10 +47,11 @@ class ChatConsumer(WebsocketConsumer):
         return result
 
     def send_message(self, message):
+        print(message)
         self.send(text_data=json.dumps(message))
 
     def fetch_messages(self, data):
-        messages = get_last_10_messages(data['chatId'], data['page'])
+        messages = get_20_messages(data['chatId'], 0)
         content = {
             'command': 'messages',
             'messages': self.messages_to_json(messages)
@@ -80,9 +81,19 @@ class ChatConsumer(WebsocketConsumer):
         }
         return self.send_chat_message(content)
 
+    def more_messages(self, data):
+        messages = get_20_messages(data['chatId'], data['page'])
+        content = {
+        'command': 'more_messages', 
+        'messages': self.messages_to_json(messages)
+        }
+        self.send_message(content)
+
+
     commands = {
         'fetch_messages': fetch_messages,
-        'new_message': new_message
+        'new_message': new_message,
+        'more_messages': more_messages,
     }
 
     # Receive message from WebSocket
@@ -93,5 +104,4 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from room group
     def chat_message(self, event):
         message = event['message']
-        print(message)
         self.send(text_data=json.dumps(message))
