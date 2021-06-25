@@ -5,6 +5,7 @@ from .views import ChatRoomView, ChatView, GetEditChatView
 ChatAsView = ChatView.as_view({
     'post': 'create',
     'get': 'list',
+    'patch': 'startChat',
 })
 
 ChatRoomAsView = ChatRoomView.as_view({

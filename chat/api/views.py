@@ -35,14 +35,8 @@ class ChatView(viewsets.ViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            # Create chat for recipient
-            request.data['recipient'] = sender.id
-            request.data['sender'] = recipient.id
-            serializer2 = ChatSerializer(data=request.data)
-            serializer2.is_valid(raise_exception=True)
-            serializer2.save()
-
             return Response(serializer.data)
+
 
     def list(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, user=request.user.id)
@@ -50,6 +44,21 @@ class ChatView(viewsets.ViewSet):
             sender=profile.id).order_by('-date_started')
         serializer = ChatSerializer(chats, many=True)
         return Response(serializer.data)
+    
+
+    def startChat(self, request, *args, **kwargs):
+        sender = get_object_or_404(Profile, user=request.user.id)
+        recipient = get_object_or_404(Profile, user=kwargs['pk'])
+        findExisting = get_object_or_404(Chat, sender=sender, recipient=recipient)
+
+        # Create chat for recipient
+        request.data['recipient'] = sender.id
+        request.data['sender'] = recipient.id
+        request.data['chatroom'] = findExisting.chatroom.id
+        serializer = ChatSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response("Chat successfully started with recipient")
 
 
 # Handle chat using chat_id
