@@ -30,7 +30,25 @@ class DisplayVideoSerializer(serializers.ModelSerializer):
         read_only_fields = ['asset_id', 'playback_id', 'duration','created_at', 'creator_profile']
         depth = 1
 
+class DisplayLikedVideoSerializer(serializers.ModelSerializer):
+    # username = serializers.CharField()
+    # profile_pic = serializers.CharField()
+    hasUserLiked = serializers.BooleanField()
+    
+    class Meta:
+        model = Video
+        fields = '__all__'
+        read_only_fields = ['asset_id', 'playback_id', 'duration','created_at', 'creator_profile']
+        depth = 1
+
+
 class LikeVideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoLikes
+        fields = '__all__'
+
+class LikedVideoDisplaySerializer(serializers.ModelSerializer):
+    videoDetails = DisplayVideoSerializer(source='liked_video', read_only=True)
     class Meta:
         model = VideoLikes
         fields = '__all__'
