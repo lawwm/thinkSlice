@@ -5,7 +5,7 @@ from rest_framework import serializers, viewsets, status, mixins, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import mux_python
-from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, LikeVideoSerializer, VideoCommentSerializer, AccessCommentSerializer
+from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, DisplayLikedVideoSerializer, LikeVideoSerializer, LikedVideoDisplaySerializer, VideoCommentSerializer, AccessCommentSerializer
 from django.contrib.auth.models import User
 from userProfiles.models import Profile
 from .models import Video, VideoComments, VideoLikes, Similarity
@@ -108,10 +108,16 @@ class AssetView(viewsets.ViewSet):
 class GetEditDeleteVideoView(viewsets.ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
-        print(self.request.method)
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
         video.views = video.views + 1
-        serializer = DisplayVideoSerializer(video)
+        check_existing = VideoLikes.objects.filter(liked_video=self.kwargs['pk'], 
+                                                user_liking=request.user.id)
+        if check_existing.exists():
+            video.hasUserLiked = True
+        else :
+            video.hasUserLiked = False
+        
+        serializer = DisplayLikedVideoSerializer(video)
         return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
@@ -198,6 +204,11 @@ class listAllUserVideosView(viewsets.ViewSet):
 
 
 class videoLikesView(viewsets.ViewSet):
+
+    def list(self, request, **kwargs):
+        videos = VideoLikes.objects.filter(user_liking=kwargs['pk'])
+        serializer = LikedVideoDisplaySerializer(videos, many=True)
+        return Response(serializer.data)
 
     def like(self, request, *args, **kwargs):
         video = get_object_or_404(Video, id=kwargs['pk'])

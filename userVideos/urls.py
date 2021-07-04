@@ -16,6 +16,7 @@ listAllUserVideosAsView = listAllUserVideosView.as_view({
 })
 
 videoLikesAsView = videoLikesView.as_view({
+    'get': 'list',
     'post': 'like',
     'delete': 'unlike'
 })
