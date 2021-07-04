@@ -9,18 +9,14 @@ from django.contrib.auth.models import User
 from .models import Message, ChatRoom
 from .views import get_20_messages
 
-User = get_user_model()
-
 
 class ChatConsumer(WebsocketConsumer):
 
     def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
 
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
+            "chat",
             self.channel_name
         )
         self.accept()
@@ -28,7 +24,7 @@ class ChatConsumer(WebsocketConsumer):
     def disconnect(self, close_code):
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
+            "chat",
             self.channel_name
         )
 
@@ -47,7 +43,6 @@ class ChatConsumer(WebsocketConsumer):
         return result
 
     def send_message(self, message):
-        print(message)
         self.send(text_data=json.dumps(message))
 
     def fetch_messages(self, data):
@@ -60,10 +55,10 @@ class ChatConsumer(WebsocketConsumer):
 
     def send_chat_message(self, message):
         async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
+            "chat",
             {
-                'type': 'chat_message',
-                'message': message
+                "type": "chat_message",
+                "message": message
             }
         )
 
@@ -77,7 +72,9 @@ class ChatConsumer(WebsocketConsumer):
         current_chat.save()
         content = {
             'command': 'new_message',
-            'message': self.message_to_json(message)
+            'message': self.message_to_json(message),
+            'chatId' : current_chat.id,
+            'recipient' : data['to']
         }
         return self.send_chat_message(content)
 
@@ -104,4 +101,5 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from room group
     def chat_message(self, event):
         message = event['message']
+        print(message)
         self.send(text_data=json.dumps(message))

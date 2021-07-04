@@ -14,7 +14,6 @@ mux-python = {git = "https://github.com/muxinc/mux-python.git"}
 django-environ = "*"
 boto3 = "*"
 django-storages = "*"
-gunicorn = "*"
 django-heroku = "*"
 whitenoise = "*"
 pillow = "*"
