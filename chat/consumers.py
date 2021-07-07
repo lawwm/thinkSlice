@@ -1,3 +1,4 @@
+from chat.api.serializers import ChatSerializer
 from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
@@ -6,7 +7,7 @@ import json
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from .models import Message, ChatRoom
+from .models import Chat, Message, ChatRoom
 from .views import get_20_messages
 
 
@@ -46,10 +47,11 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(message))
 
     def fetch_messages(self, data):
-        messages = get_20_messages(data['chatId'], 0)
+        messages = get_20_messages(data['chatroom'], 0)
         content = {
             'command': 'messages',
-            'messages': self.messages_to_json(messages)
+            'messages': self.messages_to_json(messages),
+            'chatroom': data['chatroom']
         }
         self.send_message(content)
 
@@ -67,30 +69,34 @@ class ChatConsumer(WebsocketConsumer):
         message = Message.objects.create(
             user=author,
             message=data['message'])
-        current_chat = get_object_or_404(ChatRoom, id=data['chatId'])
+        current_chat = get_object_or_404(ChatRoom, id=data['chatroom'])
         current_chat.messages.add(message)
         current_chat.save()
         content = {
             'command': 'new_message',
             'message': self.message_to_json(message),
-            'chatId' : current_chat.id,
-            'recipient' : data['to']
+            'chatroom': current_chat.id,
+            'recipient': data['to']
         }
+        if (data['isFirst']):
+            recipient_chat = get_object_or_404(Chat, recipient=data['from'], sender=data['to'])
+            serializer = ChatSerializer(recipient_chat)
+            content['chat'] = serializer.data
         return self.send_chat_message(content)
 
     def more_messages(self, data):
-        messages = get_20_messages(data['chatId'], data['page'])
+        messages = get_20_messages(data['chatroom'], data['page'])
         content = {
-        'command': 'more_messages', 
-        'messages': self.messages_to_json(messages)
+            'command': 'more_messages',
+            'messages': self.messages_to_json(messages),
+            'chatroom': data['chatroom'],
         }
         self.send_message(content)
-
 
     commands = {
         'fetch_messages': fetch_messages,
         'new_message': new_message,
-        'more_messages': more_messages,
+        'more_messages': more_messages
     }
 
     # Receive message from WebSocket
