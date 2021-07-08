@@ -41,13 +41,12 @@ class ChatView(viewsets.ViewSet):
     def list(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, user=request.user.id)
         chats = Chat.objects.filter(
-            sender=profile.user_id).order_by('-date_started')
+            sender=profile.user_id).order_by('-last_modified')
         serializer = ChatSerializer(chats, many=True)
         return Response(serializer.data)
     
 
     def startChat(self, request, *args, **kwargs):
-        print("starting chat...")
         sender = get_object_or_404(Profile, user=request.user.id)
         recipient = get_object_or_404(Profile, user=kwargs['pk'])
         findExisting = get_object_or_404(Chat, sender=sender, recipient=recipient)
@@ -75,7 +74,7 @@ class GetEditChatView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generi
         return self.partial_update(request, *args, **kwargs)
 
     def get_object(self):
-        chat = get_object_or_404(Chat, pk=self.kwargs['pk'])
+        chat = get_object_or_404(Chat, id=self.kwargs['pk'])
         self.check_object_permissions(self.request, chat)
         return chat
 
@@ -83,16 +82,13 @@ class GetEditChatView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generi
         permission_classes = [IsAuthenticated, IsChatUser]
         return [permission() for permission in permission_classes]
 
-# Get chat using chatroom_id
 
-class ChatRoomView(viewsets.ViewSet):
-    def retrieve(self, request, *args, **kwargs):
-        permission_classes = [IsAuthenticated, IsChatUser]
+# Update the last_message_count when a chat was read, using chat_id.
 
-        sender = get_object_or_404(Profile, user=request.user.id)
-        chatroom = get_object_or_404(ChatRoom, id=kwargs['pk'])
+class ChatUnreadView(viewsets.ViewSet):
 
-        chat = get_object_or_404(
-                Chat, sender=sender, chatroom=chatroom)
-        serializer = ChatSerializer(chat)
-        return Response(serializer.data)
+    def updateUnread(self, request, *args, **kwargs):
+        chat = get_object_or_404(Chat, id=self.kwargs['pk'])
+        chat.last_message_count = chat.new_message_count
+        chat.save()
+        return Response("Chat unread messages updated")

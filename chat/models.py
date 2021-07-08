@@ -18,4 +18,6 @@ class Chat(models.Model):
     recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="recipient")
     chatroom = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="chatroom")
     hidden = models.BooleanField(default=False)
-    date_started = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    last_message_count = models.IntegerField(default=0)
+    new_message_count = models.IntegerField(default=0)
