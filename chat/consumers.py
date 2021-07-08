@@ -2,6 +2,7 @@ from chat.api.serializers import ChatSerializer
 from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
+from django.db.models import Q
 
 import json
 
@@ -72,6 +73,11 @@ class ChatConsumer(WebsocketConsumer):
         current_chat = get_object_or_404(ChatRoom, id=data['chatroom'])
         current_chat.messages.add(message)
         current_chat.save()
+
+        recipient_chat = get_object_or_404(Chat, ~Q(sender=author.id), chatroom=current_chat.id)
+        recipient_chat.new_message_count = recipient_chat.new_message_count + 1
+        recipient_chat.save()
+
         content = {
             'command': 'new_message',
             'message': self.message_to_json(message),
@@ -79,7 +85,6 @@ class ChatConsumer(WebsocketConsumer):
             'recipient': data['to']
         }
         if (data['isFirst']):
-            recipient_chat = get_object_or_404(Chat, recipient=data['from'], sender=data['to'])
             serializer = ChatSerializer(recipient_chat)
             content['chat'] = serializer.data
         return self.send_chat_message(content)
