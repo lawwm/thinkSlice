@@ -110,6 +110,7 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
         video.views = video.views + 1
+        video.save()
         check_existing = VideoLikes.objects.filter(liked_video=self.kwargs['pk'], 
                                                 user_liking=request.user.id)
         if check_existing.exists():
@@ -196,7 +197,7 @@ class listAllUserVideosView(viewsets.ViewSet):
             q &= Q(creator_profile__available=available)
 
         # Return filtered videos
-        videos = Video.objects.filter(q).order_by(filter_by)[index_head:index_tail]
+        videos = Video.objects.select_related('creator_profile').filter(q).order_by(filter_by)[index_head:index_tail]
         serializer = DisplayVideoSerializer(videos, many=True)
         return Response(serializer.data)
 
@@ -211,14 +212,22 @@ class videoLikesView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def like(self, request, *args, **kwargs):
-        video = get_object_or_404(Video, id=kwargs['pk'])
-        request.data['liked_video'] = video.id
+        # Check if same profile has liked the same video
+        check_existing = VideoLikes.objects.filter(liked_video=kwargs['pk'], user_liking=request.user.id)
+        if check_existing.exists():
+            return Response("You've already liked this particular video",
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # create VideoLikes object
+        request.data['liked_video'] = kwargs['pk']
         request.data['user_liking'] = get_object_or_404(
             User, id=request.user.id).id
         serializer = LikeVideoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        print("liked")
+
+        # Increment likes on video
+        video = get_object_or_404(Video, id=kwargs['pk'])
         video.likes = video.likes + 1
         video.save()
         return Response(serializer.data)
@@ -256,8 +265,7 @@ class videoCommentsView(viewsets.ViewSet):
         return Response(serializer.data)
     
     def list(self, request, *args, **kwargs):
-        video_id = get_object_or_404(Video, id=kwargs['pk']).id
-        comments = VideoComments.objects.filter(commented_video=video_id, parent_comment=None).order_by('-date_comment_edited')
+        comments = VideoComments.objects.filter(commented_video=kwargs['pk'], parent_comment=None).order_by('-date_comment_edited')
         serializer = VideoCommentSerializer(comments, many=True)
         return Response(serializer.data)
 
@@ -364,7 +372,7 @@ class SearchVideoView(viewsets.ViewSet):
 
         if search_name == None:
             return Response('No input was detected.', status=400)
-        videos = Video.objects.annotate(
+        videos = Video.objects.select_related('creator_profile').annotate(
             match=Greatest(
                 Similarity("video_title", models.Value(search_name)), 
                 Similarity("creator_profile__username", models.Value(search_name)),
