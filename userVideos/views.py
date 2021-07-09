@@ -5,7 +5,7 @@ from rest_framework import serializers, viewsets, status, mixins, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import mux_python
-from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, DisplayLikedVideoSerializer, LikeVideoSerializer, LikedVideoDisplaySerializer, VideoCommentSerializer, AccessCommentSerializer
+from .serializers import UploadResponseSerializer, CreateVideoSerializer, DisplayVideoSerializer, DisplayLikedVideoSerializer, LikeVideoSerializer, LikedVideoDisplaySerializer, VideoCommentSerializer, AccessCommentSerializer, VideoReadCommentSerializer
 from django.contrib.auth.models import User
 from userProfiles.models import Profile
 from .models import Video, VideoComments, VideoLikes, Similarity
@@ -265,8 +265,8 @@ class videoCommentsView(viewsets.ViewSet):
         return Response(serializer.data)
     
     def list(self, request, *args, **kwargs):
-        comments = VideoComments.objects.filter(commented_video=kwargs['pk'], parent_comment=None).order_by('-date_comment_edited')
-        serializer = VideoCommentSerializer(comments, many=True)
+        comments = VideoComments.objects.select_related('user_commenting').filter(commented_video=kwargs['pk'], parent_comment=None).order_by('-date_comment_edited')
+        serializer = VideoReadCommentSerializer(comments, many=True)
         return Response(serializer.data)
 
 # Get the replies to a comment
@@ -291,9 +291,8 @@ class commentRepliesView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
-        comment_id = get_object_or_404(VideoComments, id=kwargs['pk']).id
-        replies = VideoComments.objects.filter(parent_comment=comment_id).order_by('-date_comment_edited')
-        serializer = VideoCommentSerializer(replies, many=True)
+        replies = VideoComments.objects.select_related('user_commenting').filter(parent_comment=kwargs['pk']).order_by('-date_comment_edited')
+        serializer = VideoReadCommentSerializer(replies, many=True)
         return Response(serializer.data)
 
 # Get/Edit/Delete one comment
