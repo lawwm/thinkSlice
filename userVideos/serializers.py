@@ -61,6 +61,18 @@ class VideoCommentSerializer(serializers.ModelSerializer):
         model = VideoComments
         fields = '__all__'
 
+class VideoReadCommentSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True, source="user_commenting.username")
+    profilePic = serializers.URLField(read_only=True, source="user_commenting.profile_pic")
+    userId = serializers.IntegerField(read_only=True, source="user_commenting.user.id")
+    comment_text = serializers.CharField(read_only=True)
+    date_comment = serializers.DateField(read_only=True)
+    date_comment_edited = serializers.DateField(read_only=True)
+    edited = serializers.BooleanField(read_only=True)
+    has_replies = serializers.BooleanField(read_only=True)
+
+
 class AccessCommentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True, source="user_commenting.username")
     profilePic = serializers.URLField(read_only=True, source="user_commenting.profile_pic")
