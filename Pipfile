@@ -21,6 +21,7 @@ channels = "*"
 channels-redis = "*"
 daphne = "*"
 django-cors-middleware = "*"
+django-redis = "*"
 
 [dev-packages]
 pylint = "*"

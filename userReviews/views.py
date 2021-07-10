@@ -8,6 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.permissions import IsReviewerOrReadOnly
 # Create your views here.
 
+#Cache imports
+from django.core.cache import cache
+
 # Create review/ list all tutor's reviews
 
 
@@ -38,12 +41,28 @@ class TutorReviewView(viewsets.ViewSet):
                                       request.data['star_rating'])/(profile.total_tutor_reviews + 1)
         profile.total_tutor_reviews = profile.total_tutor_reviews + 1
         profile.save()
+
+        #Delete existing caches
+        tutor_cache_key = "/api/reviews/tutors/" + str(kwargs['pk'])
+        student_cache_key = "/api/reviews/students/" + str(request.user.id)
+        cache.delete(tutor_cache_key)
+        cache.delete(student_cache_key)
+
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
+        #Check for cache
+        cache_key = request.path
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
+
         profile_id = get_object_or_404(Profile, user=kwargs['pk']).id
-        reviews = Review.objects.filter(tutor_profile=profile_id)
+        reviews = Review.objects.select_related('student_profile').filter(tutor_profile=profile_id)
         serializer = StudentReviewSerializer(reviews, many=True)
+
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
         return Response(serializer.data)
 
     def get_permissions(self):
@@ -54,14 +73,22 @@ class TutorReviewView(viewsets.ViewSet):
         return [permission() for permission in permission_classes]
 
 # Get all reviews based on student
+class StudentReviewView(viewsets.ViewSet):
+    def list(self, request, *args, **kwargs):
+        #Check for cache
+        cache_key = request.path
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
 
-
-class StudentReviewView(generics.ListAPIView):
-    serializer_class = TutorReviewSerializer
-
-    def get_queryset(self):
         student_profile = get_object_or_404(Profile, user=self.kwargs['pk']).id
-        return Review.objects.filter(student_profile=student_profile)
+        reviews = Review.objects.select_related('tutor_profile').filter(student_profile=student_profile)
+        serializer = TutorReviewSerializer(reviews, many=True)
+
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
+        return Response(serializer.data)
+
 
 # Delete all reviews(later)
 
@@ -83,6 +110,13 @@ class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin
         profile.aggregate_star = (profile.aggregate_star * profile.total_tutor_reviews - old_review.star_rating +
                                   request.data['star_rating'])/profile.total_tutor_reviews
         profile.save()
+
+        #Delete existing caches
+        tutor_cache_key = "/api/reviews/tutors/" + str(profile.user_id)
+        student_cache_key = "/api/reviews/students/" + str(request.user.id)
+        cache.delete(tutor_cache_key)
+        cache.delete(student_cache_key)
+
         return self.partial_update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
@@ -98,6 +132,13 @@ class GetEditDeleteReviewView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin
             profile.aggregate_star = (profile.aggregate_star * (profile.total_tutor_reviews + 1) -
                                         review.star_rating)/profile.total_tutor_reviews
         profile.save()
+
+        #Delete existing caches
+        tutor_cache_key = "/api/reviews/tutors/" + str(profile.user_id)
+        student_cache_key = "/api/reviews/students/" + str(request.user.id)
+        cache.delete(tutor_cache_key)
+        cache.delete(student_cache_key)
+
         return self.destroy(request, *args, **kwargs)
 
     def get_object(self):

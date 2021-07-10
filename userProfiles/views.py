@@ -14,6 +14,10 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser, File
 from django.contrib.postgres.search import SearchVector
 from django.db import models
 
+#Cache import
+from django.core.cache import cache
+
+
 class AllProfileView(APIView):
     # GET all profiles
     def get(self, request, format=None):
@@ -27,8 +31,17 @@ class ProfileView(viewsets.ViewSet):
 
     #GET one profile(general)
     def retrieve(self, request, *args, **kwargs):
+        #Check for cache
+        cache_key = request.path
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
+
         profiles = get_object_or_404(Profile, user=kwargs['pk'])
         serializer = ProfileGeneralSerializer(profiles, many=False)
+
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
         return Response(serializer.data)
 
     # Upload profile picture to S3
@@ -46,7 +59,13 @@ class ProfileView(viewsets.ViewSet):
         self.check_object_permissions(self.request, profiles)
         serializer = ProfileGeneralSerializer(profiles, data = request.data, partial=True, many=False)
         if serializer.is_valid(raise_exception=True):
+            #Save information
             serializer.save()
+
+            #Set new cache value
+            cache_key = request.path
+            cache.set((cache_key), serializer.data, 60 * 15)
+
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)
 
@@ -57,6 +76,11 @@ class ProfileView(viewsets.ViewSet):
         user_id = profiles.user_id
         user = get_object_or_404(User, pk=user_id)
         user.delete()
+
+        #Delete cache value
+        cache_key = request.path
+        cache.delete(cache_key)
+
         return Response("Successfully deleted", status=200)
 
     # Set permissions for different actions
@@ -72,8 +96,17 @@ class ProfileView(viewsets.ViewSet):
 class DetailProfileView(viewsets.ViewSet):
     # GET one profile (detail)
     def retrieve(self, request, *args, **kwargs):
+        #Check for cache
+        cache_key = request.path
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
+
         profiles = get_object_or_404(Profile, user=kwargs['pk'])
         serializer = ProfileDetailSerializer(profiles, many=False)
+        
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
         return Response(serializer.data)
 
     # PATCH your own profile (detail)
@@ -83,6 +116,11 @@ class DetailProfileView(viewsets.ViewSet):
         serializer = ProfileDetailSerializer(profiles, data = request.data, partial=True, many=False)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+
+            #Set new cache value
+            cache_key = request.path
+            cache.set((cache_key), serializer.data, 60 * 15)
+
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)
 
@@ -100,6 +138,11 @@ class DetailProfileView(viewsets.ViewSet):
         serializer = ProfileDetailSerializer(profiles, data=data, partial=True, many=False)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+
+            #Set new cache value
+            cache_key = request.path
+            cache.set((cache_key), serializer.data, 60 * 15)
+
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)
 

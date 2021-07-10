@@ -16,6 +16,9 @@ from mux_python.rest import NotFoundException
 from django.db import models
 from django.db.models.functions import Greatest
 from django.db.models import Q
+
+#Cache imports
+from django.core.cache import cache
 # Create your views here.
 
 # Create direct url
@@ -101,13 +104,23 @@ class AssetView(viewsets.ViewSet):
         print(serializer)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        #Delete cache value
+        profile_cache_key = "/api/profiles/" + str(request.user.id)
+        all_home_key = "/homepage/*"
+        cache.delete(profile_cache_key)
+        cache.delete_pattern(all_home_key)
+
         return Response(serializer.data)
 
 
 # Get/Edit/Delete a video from video_id
 class GetEditDeleteVideoView(viewsets.ViewSet):
-
     def retrieve(self, request, *args, **kwargs):
+        #Check for cache
+        cache_key = request.path
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
         video.views = video.views + 1
         video.save()
@@ -119,8 +132,13 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
             video.hasUserLiked = False
         
         serializer = DisplayLikedVideoSerializer(video)
+
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
         return Response(serializer.data)
 
+    # Update a video
     def partial_update(self, request, *args, **kwargs):
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
         self.check_object_permissions(self.request, video)
@@ -128,8 +146,19 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
             video, data=request.data, partial=True, many=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        #Delete cache value
+        profile_cache_key = "/api/profiles/" + str(request.user.id)
+        watch_cache_key = "/api/videos/" + str(self.kwargs['pk'])
+        all_home_key = "/homepage/*"
+
+        cache.delete(profile_cache_key)
+        cache.delete(watch_cache_key)
+        cache.delete_pattern(all_home_key)
+
         return Response(serializer.data)
 
+    # Delete a video
     def destroy(self, request, *args, **kwargs):
         # Call to API
         # Authentication Setup
@@ -148,6 +177,16 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
             assets_api.delete_asset(video.asset_id)
             deletedVideo = video.delete()
             print(deletedVideo)
+
+            #Delete cache value
+            profile_cache_key = "/api/profiles/" + str(video.creator_profile.user_id)
+            watch_cache_key = "/api/videos/" + str(self.kwargs['pk'])
+            all_home_key = "/homepage/*"
+
+            cache.delete(profile_cache_key)
+            cache.delete(watch_cache_key)
+            cache.delete_pattern(all_home_key)
+
             return Response("Video successfully deleted", status=status.HTTP_200_OK)
         except NotFoundException as e:
             assert e != None
@@ -165,11 +204,13 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
 # n is the set of 9 videos
 # Either filter by 'created_at' or 'views'
 # ascending is boolean, so either 'true' or 'false'
-
-
 class listAllUserVideosView(viewsets.ViewSet):
     def list(self, request):
-        # Get query params
+
+        #Initialise cache key
+        cache_key = "/homepage" + request.path
+
+        #Get query params
         subject = request.GET.get('subject', None)
         location = request.GET.get('location', None)
         star_upper_limit = request.GET.get('star_upper_limit', None)
@@ -182,6 +223,27 @@ class listAllUserVideosView(viewsets.ViewSet):
         index_head = index_tail - 9
         if ascending != 'true':
             filter_by = '-' + filter_by
+
+        # Check for cache
+        cache_key += '?'
+        if subject != None:
+            cache_key += 'subject=' + subject
+        if location != None:
+            cache_key += 'location=' + location
+        if star_upper_limit != None:
+            cache_key += 'star_upper_limit=' + star_upper_limit
+        if star_lower_limit != None:
+            cache_key += 'star_lower_limit=' + star_lower_limit
+        if available != None:
+            cache_key += 'available=' + available
+        if limit_n != None:
+            cache_key += 'limit_n=' + limit_n
+        if filter_by != None:
+            cache_key += 'filter_by=' + filter_by
+        # if ascending != None:
+        #     cache_key += 'ascending=' + ascending
+        if (cache.has_key(cache_key)):
+            return Response(cache.get(cache_key))
 
         # Append to filter criteria
         q = Q()
@@ -199,6 +261,10 @@ class listAllUserVideosView(viewsets.ViewSet):
         # Return filtered videos
         videos = Video.objects.select_related('creator_profile').filter(q).order_by(filter_by)[index_head:index_tail]
         serializer = DisplayVideoSerializer(videos, many=True)
+
+        #Set cache value
+        cache.set((cache_key), serializer.data, 60 * 15)
+
         return Response(serializer.data)
 
 # Like a video from video_id

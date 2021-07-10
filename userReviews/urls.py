@@ -6,8 +6,12 @@ TutorReviewViewAsView = TutorReviewView.as_view({
     'post': 'create',
 })
 
+StudentReviewViewAsView = StudentReviewView.as_view({
+    'get': 'list',
+})
+
 urlpatterns = [ 
     path('api/reviews/tutors/<int:pk>', TutorReviewViewAsView, name='create_review'),
-    path('api/reviews/students/<int:pk>', StudentReviewView.as_view(), name="student_review"),
+    path('api/reviews/students/<int:pk>', StudentReviewViewAsView, name="student_review"),
     path('api/reviews/<int:pk>', GetEditDeleteReviewView.as_view(), name="handle_review"),
 ]
