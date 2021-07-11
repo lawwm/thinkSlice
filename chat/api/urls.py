@@ -5,7 +5,6 @@ from .views import ChatView, GetEditChatView, ChatUnreadView
 ChatAsView = ChatView.as_view({
     'post': 'create',
     'get': 'list',
-    'patch': 'startChat',
 })
 
 ChatUnreadAsView = ChatUnreadView.as_view({
