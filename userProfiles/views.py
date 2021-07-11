@@ -1,22 +1,18 @@
-from django.db.models.fields import CharField
-from django.shortcuts import render
-from rest_framework import generics, serializers, permissions, viewsets
+from rest_framework import  viewsets
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from .serializers import ProfileGeneralSerializer, ProfileDetailSerializer, ProfilePictureSerializer, ProfileReviewSerializer
 from .models import Profile, Similarity
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from accounts.permissions import IsOwnerOrReadOnly
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser, FileUploadParser
-from django.contrib.postgres.search import SearchVector
 from django.db import models
 
 #Cache import
 from django.core.cache import cache
-
+from appmanager.settings import CACHE_TTL
 
 class AllProfileView(APIView):
     # GET all profiles
@@ -40,7 +36,7 @@ class ProfileView(viewsets.ViewSet):
         serializer = ProfileGeneralSerializer(profiles, many=False)
 
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 
@@ -64,7 +60,7 @@ class ProfileView(viewsets.ViewSet):
 
             #Set new cache value
             cache_key = request.path
-            cache.set((cache_key), serializer.data, 60 * 15)
+            cache.set((cache_key), serializer.data, CACHE_TTL)
 
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)
@@ -105,7 +101,7 @@ class DetailProfileView(viewsets.ViewSet):
         serializer = ProfileDetailSerializer(profiles, many=False)
         
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 
@@ -119,7 +115,7 @@ class DetailProfileView(viewsets.ViewSet):
 
             #Set new cache value
             cache_key = request.path
-            cache.set((cache_key), serializer.data, 60 * 15)
+            cache.set((cache_key), serializer.data,  CACHE_TTL)
 
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)
@@ -141,7 +137,7 @@ class DetailProfileView(viewsets.ViewSet):
 
             #Set new cache value
             cache_key = request.path
-            cache.set((cache_key), serializer.data, 60 * 15)
+            cache.set((cache_key), serializer.data, CACHE_TTL)
 
             return Response(serializer.data)
         return Response("Wrong parameters", status=400)

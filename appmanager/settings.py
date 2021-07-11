@@ -155,7 +155,9 @@ CACHES = {
         }
     }
 }
-print(CACHES['default'])
+
+CACHE_TTL = 60 * 60 * 24
+# print(CACHES['default'])
 
 AUTH_PASSWORD_VALIDATORS = [
     {

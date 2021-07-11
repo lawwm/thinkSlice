@@ -1,7 +1,6 @@
 from django.db.models.fields import CharField
 from django.shortcuts import get_object_or_404
-from mux_python.models.asset import Asset
-from rest_framework import serializers, viewsets, status, mixins, generics
+from rest_framework import viewsets, status, mixins, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import mux_python
@@ -11,7 +10,7 @@ from userProfiles.models import Profile
 from .models import Video, VideoComments, VideoLikes, Similarity
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.permissions import IsVideoOwnerOrReadOnly, IsCommentOwnerOrReadOnly
-from appmanager.settings import MUX_TOKEN_SECRET, MUX_TOKEN_ID
+from appmanager.settings import MUX_TOKEN_SECRET, MUX_TOKEN_ID, CACHE_TTL
 from mux_python.rest import NotFoundException
 from django.db import models
 from django.db.models.functions import Greatest
@@ -134,7 +133,7 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
         serializer = DisplayLikedVideoSerializer(video)
 
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 
@@ -263,7 +262,7 @@ class listAllUserVideosView(viewsets.ViewSet):
         serializer = DisplayVideoSerializer(videos, many=True)
 
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 

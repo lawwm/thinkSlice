@@ -10,7 +10,7 @@ from accounts.permissions import IsReviewerOrReadOnly
 
 #Cache imports
 from django.core.cache import cache
-
+from appmanager.settings import CACHE_TTL
 # Create review/ list all tutor's reviews
 
 
@@ -61,7 +61,7 @@ class TutorReviewView(viewsets.ViewSet):
         serializer = StudentReviewSerializer(reviews, many=True)
 
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 
@@ -85,7 +85,7 @@ class StudentReviewView(viewsets.ViewSet):
         serializer = TutorReviewSerializer(reviews, many=True)
 
         #Set cache value
-        cache.set((cache_key), serializer.data, 60 * 15)
+        cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
 
