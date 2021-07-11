@@ -230,6 +230,7 @@ AWS_S3_OBJECT_PARAMETERS = {
 
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
+AWS_S3_CUSTOM_DOMAIN = "d9ws6ej9ht96n.cloudfront.net"
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 

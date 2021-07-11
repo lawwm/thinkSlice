@@ -155,9 +155,11 @@ class SearchProfileView(viewsets.ViewSet):
     def list(self, request):
         search_name = request.GET.get('name', None)
         if search_name == None:
-            return Response('No input was detected.', status=400)
+            cache.clear()
+            return Response('Cache cleared', status=400)
         profiles = Profile.objects.annotate(
             match=Similarity("username", models.Value(search_name)), 
         ).filter(match__gt=0.20)
         serializers = ProfileReviewSerializer(profiles, many=True)
-        return Response(serializers.data)
+        cache.clear()
+        return Response({serializers.data})
