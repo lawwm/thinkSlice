@@ -21,24 +21,34 @@ class ChatView(viewsets.ViewSet):
 
         try:
             findExisting = get_object_or_404(
-                Chat, sender=recipient, recipient=sender)
+                Chat, sender=sender, recipient=recipient)
             serializer = ChatSerializer(findExisting)
             return Response(serializer.data)
 
         except:
             chatroom = ChatRoom.objects.create()
             recipientProfile = get_object_or_404(Profile, user=recipient)
+            senderProfile = get_object_or_404(Profile, user=sender)
 
             # Create chat for sender
             request.data['chatroom'] = chatroom.id
             request.data['recipient'] = recipient.id
             request.data['sender'] = sender.id
             request.data['recipientProfile'] = recipientProfile.id
-            serializer = ChatSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer1 = ChatSerializer(data=request.data)
+            serializer1.is_valid(raise_exception=True)
+            serializer1.save()
 
-            return Response(serializer.data)
+            # Create chat for recipient
+            request.data['recipient'] = sender.id
+            request.data['sender'] = recipient.id
+            request.data['chatroom'] = chatroom.id
+            request.data['recipientProfile'] = senderProfile.id
+            serializer2 = ChatSerializer(data=request.data)
+            serializer2.is_valid(raise_exception=True)
+            serializer2.save()
+
+            return Response(serializer1.data)
 
 
     def list(self, request, *args, **kwargs):
@@ -47,23 +57,6 @@ class ChatView(viewsets.ViewSet):
             sender=user).order_by('-last_modified')
         serializer = ChatSerializer(chats, many=True)
         return Response(serializer.data)
-    
-
-    def startChat(self, request, *args, **kwargs):
-        sender = get_object_or_404(User, id=request.user.id)
-        recipient = get_object_or_404(User, id=kwargs['pk'])
-        findExisting = get_object_or_404(Chat, sender=sender, recipient=recipient)
-        senderProfile = get_object_or_404(Profile, user=sender)
-
-        # Create chat for recipient
-        request.data['recipient'] = sender.id
-        request.data['sender'] = recipient.id
-        request.data['chatroom'] = findExisting.chatroom.id
-        request.data['recipientProfile'] = senderProfile.id
-        serializer = ChatSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response("Chat successfully started with recipient")
 
 
 # Handle chat using chat_id
