@@ -74,5 +74,5 @@ class IsChatUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
 
         # All permissions are only allowed to either user in the chat.
-        return request.user.id == obj.sender.user_id
+        return request.user.id == obj.sender.id
 
