@@ -43,16 +43,5 @@ class Profile(models.Model):
     total_tutor_reviews = models.IntegerField(default=0)
     qualifications = models.CharField(blank=True, max_length=255)
 
-    #schedule = models.ArrayField()
-
-    # If is_student is true
-    #total_student_reviews = models.IntegerField(default=0)
-
-    # def clear_tutor(self):
-    #     self.qualifications = ''
-    #     self.aggregate_star = None
-    #     self.duration_classes = []
-    #     self.subjects = []
-
 class Similarity(models.Func):
     function = "similarity"

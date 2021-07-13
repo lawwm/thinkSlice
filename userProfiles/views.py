@@ -162,4 +162,4 @@ class SearchProfileView(viewsets.ViewSet):
         ).filter(match__gt=0.20)
         serializers = ProfileReviewSerializer(profiles, many=True)
         cache.clear()
-        return Response({serializers.data})
+        return Response(serializers.data)

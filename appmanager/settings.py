@@ -156,7 +156,7 @@ CACHES = {
     }
 }
 
-CACHE_TTL = 60 * 60 * 24
+CACHE_TTL = 60 * 15
 # print(CACHES['default'])
 
 AUTH_PASSWORD_VALIDATORS = [

@@ -40,7 +40,7 @@ class DisplayLikedVideoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['asset_id', 'playback_id', 'duration','created_at', 'creator_profile']
         depth = 1
-
+    
 
 class LikeVideoSerializer(serializers.ModelSerializer):
     class Meta:
