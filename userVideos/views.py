@@ -271,7 +271,7 @@ class listAllUserVideosView(viewsets.ViewSet):
 class videoLikesView(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
-        videos = VideoLikes.objects.filter(user_liking=kwargs['pk'])
+        videos = VideoLikes.objects.select_related('liked_video').filter(user_liking=kwargs['pk'])
         serializer = LikedVideoDisplaySerializer(videos, many=True)
         return Response(serializer.data)
 
