@@ -117,7 +117,7 @@ class AssetView(viewsets.ViewSet):
 class GetEditDeleteVideoView(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         #Check for cache
-        cache_key = request.path
+        cache_key = "/user/" + str(request.user.id) + request.path
         if (cache.has_key(cache_key)):
             return Response(cache.get(cache_key))
         video = get_object_or_404(Video, pk=self.kwargs['pk'])
@@ -132,7 +132,7 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
         
         serializer = DisplayLikedVideoSerializer(video)
 
-        #Set cache value
+        # Set cache value
         cache.set((cache_key), serializer.data, CACHE_TTL)
 
         return Response(serializer.data)
@@ -148,11 +148,11 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
 
         #Delete cache value
         profile_cache_key = "/api/profiles/" + str(request.user.id)
-        watch_cache_key = "/api/videos/" + str(self.kwargs['pk'])
+        watch_cache_key = "/user/*/api/videos/" + str(self.kwargs['pk'])
         all_home_key = "/homepage/*"
 
         cache.delete(profile_cache_key)
-        cache.delete(watch_cache_key)
+        cache.delete_pattern(watch_cache_key)
         cache.delete_pattern(all_home_key)
 
         return Response(serializer.data)
@@ -174,16 +174,15 @@ class GetEditDeleteVideoView(viewsets.ViewSet):
         # Check that asset is gone
         try:
             assets_api.delete_asset(video.asset_id)
-            deletedVideo = video.delete()
-            print(deletedVideo)
+            video.delete()
 
             #Delete cache value
             profile_cache_key = "/api/profiles/" + str(video.creator_profile.user_id)
-            watch_cache_key = "/api/videos/" + str(self.kwargs['pk'])
+            watch_cache_key = "/user/?/api/videos/" + str(self.kwargs['pk'])
             all_home_key = "/homepage/*"
 
             cache.delete(profile_cache_key)
-            cache.delete(watch_cache_key)
+            cache.delete_pattern(watch_cache_key)
             cache.delete_pattern(all_home_key)
 
             return Response("Video successfully deleted", status=status.HTTP_200_OK)
@@ -295,6 +294,11 @@ class videoLikesView(viewsets.ViewSet):
         video = get_object_or_404(Video, id=kwargs['pk'])
         video.likes = video.likes + 1
         video.save()
+
+        # Delete cache
+        watch_cache_key = "/user/" + str(request.user.id) + "/api/videos/" + str(self.kwargs['pk'])
+        cache.delete(watch_cache_key)
+
         return Response(serializer.data)
 
     def unlike(self, request, *args, **kwargs):
@@ -306,6 +310,11 @@ class videoLikesView(viewsets.ViewSet):
             print(unliked)
             video.likes = video.likes - 1
             video.save()
+
+            # Delete cache
+            watch_cache_key = "/user/" + str(request.user.id) + "/api/videos/" + str(self.kwargs['pk'])
+            cache.delete(watch_cache_key)
+
             return Response("Like removed", status=status.HTTP_200_OK)
         except NotFoundException as e:
             assert e != None
