@@ -70,21 +70,27 @@ class ChatConsumer(WebsocketConsumer):
         message = Message.objects.create(
             user=author,
             message=data['message'])
-        current_chat = get_object_or_404(ChatRoom, id=data['chatroom'])
-        current_chat.messages.add(message)
+        current_chatroom = get_object_or_404(ChatRoom, id=data['chatroom'])
+        current_chatroom.messages.add(message)
+        current_chatroom.save()
+
+        current_chat = get_object_or_404(Chat, sender=author, chatroom=current_chatroom)
         current_chat.save()
 
-        recipient_chat = get_object_or_404(Chat, ~Q(sender=author.id), chatroom=current_chat.id)
+        recipient_chat = get_object_or_404(Chat, ~Q(sender=author.id), chatroom=current_chatroom.id)
         recipient_chat.new_message_count = recipient_chat.new_message_count + 1
+        is_hidden = recipient_chat.hidden
+        if (is_hidden):
+            recipient_chat.hidden = False
         recipient_chat.save()
 
         content = {
             'command': 'new_message',
             'message': self.message_to_json(message),
-            'chatroom': current_chat.id,
+            'chatroom': current_chatroom.id,
             'recipient': data['to']
         }
-        if (data['isFirst']):
+        if (data['isFirst'] or is_hidden):
             serializer = ChatSerializer(recipient_chat)
             content['chat'] = serializer.data
         return self.send_chat_message(content)

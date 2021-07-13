@@ -22,6 +22,9 @@ class ChatView(viewsets.ViewSet):
         try:
             findExisting = get_object_or_404(
                 Chat, sender=sender, recipient=recipient)
+            if (findExisting.hidden):
+                findExisting.hidden = False
+                findExisting.save()
             serializer = ChatSerializer(findExisting)
             return Response(serializer.data)
 
