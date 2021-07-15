@@ -10,7 +10,7 @@ Traditional qualifiers such as logistics and qualifications are not sufficient t
 
 **For students:** 
 1. Browse through a catalog of videos to find a teacher that fits your vibe.
-2. Checkout their profile and reviews.
+2. Check out their profile and reviews.
 3. Chat with your potential educator to setup a lesson.
 
 &nbsp;
@@ -130,9 +130,13 @@ SELECT * from public."userVideos_video"
 ```
 
 &nbsp;
-### Redis
+### Local Redis/Docker Installation
 Redis is used for the chat application as well as for caching.
-- Local redis setup guide
+- Starting a redis server
+```
+docker run -p 6379:6379 -d redis:5
+```
+- Use Docker Desktop to start/stop the server
 
 &nbsp; 
 ### MUX API
