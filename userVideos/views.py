@@ -336,6 +336,11 @@ class videoCommentsView(viewsets.ViewSet):
         serializer.save()
         video.num_of_comments = video.num_of_comments + 1
         video.save()
+
+        # Clear cache
+        watch_cache_key = "/user/*/api/videos/" + str(self.kwargs['pk'])
+        cache.delete_pattern(watch_cache_key)
+
         return Response(serializer.data)
     
     def list(self, request, *args, **kwargs):
@@ -362,6 +367,11 @@ class commentRepliesView(viewsets.ViewSet):
             comment.save()
         video.num_of_comments = video.num_of_comments + 1
         video.save()
+
+        # Clear cache
+        watch_cache_key = "/user/*/api/videos/" + str(comment.commented_video.id)
+        cache.delete_pattern(watch_cache_key)
+
         return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
@@ -379,16 +389,35 @@ class GetEditDeleteCommentView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        # Get comment and video object
         comment = get_object_or_404(VideoComments, id=kwargs['pk'])
         video = get_object_or_404(Video, id=comment.commented_video.id)
+
+        # Reduce num of comments by 1
         video.num_of_comments = video.num_of_comments - 1
         video.save()
+
+        # If it is a reply
         if (not comment.parent_comment == None):
+            # If get parent comment and check if there is one reply
             parent_comment = get_object_or_404(VideoComments, id=comment.parent_comment.id)
             reply_count = VideoComments.objects.filter(parent_comment=parent_comment.id).count()
+
             if (reply_count == 1):
                 parent_comment.has_replies = 0
                 parent_comment.save()
+        else :
+            # Get the reply count to comment that we are deleting
+            reply_count = VideoComments.objects.filter(parent_comment=kwargs['pk']).count()
+
+            # Reduce num of comments by num of replies
+            video.num_of_comments = video.num_of_comments - reply_count
+            video.save()
+
+        # Clear cache
+        watch_cache_key = "/user/*/api/videos/" + str(comment.commented_video.id)
+        cache.delete_pattern(watch_cache_key)
+
         return self.destroy(request, *args, **kwargs)
 
     def patch(self, request, *args, **kwargs):
