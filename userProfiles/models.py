@@ -42,7 +42,7 @@ class Profile(models.Model):
     subjects = ArrayField(models.CharField(
         max_length=55), blank=True, null=False, default=list)
     total_tutor_reviews = models.IntegerField(default=0)
-    qualifications = models.CharField(blank=True, max_length=255)
+    qualifications = models.CharField(blank=True, null=True, max_length=255)
 
 class Similarity(models.Func):
     function = "similarity"
