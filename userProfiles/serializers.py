@@ -26,7 +26,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['tutor_whatsapp', 'tutor_telegram', 'aggregate_star', 'location', 'duration_classes', 
-        'subjects', 'total_tutor_reviews', 'qualifications', ]
+        'subjects', 'total_tutor_reviews', 'qualifications', 'tuition_rates']
         extra_kwargs = {'user' : {'read_only': True}, 'aggregate_star': {'read_only': True} }
 
 # Serializer for getting profile information within review

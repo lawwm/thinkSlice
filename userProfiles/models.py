@@ -38,6 +38,7 @@ class Profile(models.Model):
     location = models.CharField(max_length=55, blank=True, null=True)
     duration_classes = ArrayField(models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(12)]), default=emptyList, blank=True)
+    tuition_rates = models.IntegerField(blank=True, null=True)
     subjects = ArrayField(models.CharField(
         max_length=55), blank=True, null=False, default=list)
     total_tutor_reviews = models.IntegerField(default=0)
