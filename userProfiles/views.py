@@ -47,6 +47,10 @@ class ProfileView(viewsets.ViewSet):
         serializers = ProfilePictureSerializer(profiles, data=request.data)
         if serializers.is_valid(raise_exception=True):
             serializers.save()
+            
+            #Delete cache value
+            cache_key = request.path
+            cache.delete(cache_key)
             return Response(serializers.data)
 
     # PATCH your own profile (general)
