@@ -57,7 +57,7 @@ class ChatView(viewsets.ViewSet):
     def list(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
         chats = Chat.objects.filter(
-            sender=user).exclude(hidden=True).order_by('-last_modified')
+            sender=user).order_by('-last_modified')
         serializer = ChatSerializer(chats, many=True)
         return Response(serializer.data)
 
